@@ -66,8 +66,8 @@ const ContactSection = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {[
-              { name: "name", label: "Your Name", type: "text", placeholder: "John Doe" },
-              { name: "email", label: "Email Address", type: "email", placeholder: "john@example.com" },
+              { name: "name", label: "Your Name", type: "text", placeholder: "e.g. Arjun Mehta" },
+              { name: "email", label: "Email Address", type: "email", placeholder: "arjun@company.com" },
             ].map((field) => (
               <div key={field.name}>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">{field.label}</label>
