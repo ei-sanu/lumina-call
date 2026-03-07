@@ -90,7 +90,7 @@ const Terms = () => {
           <div className="text-center">
             <p className="text-muted-foreground text-sm mb-4">
               Questions about our terms? Contact us at{" "}
-              <a href="mailto:legal@nexuscall.com" className="text-foreground hover:underline">legal@nexuscall.com</a>
+              <a href="mailto:legal@novaarc.com" className="text-foreground hover:underline">legal@novaarc.com</a>
             </p>
             <Link to="/signup">
               <button className="gradient-button px-6 py-3 rounded-xl text-sm">
