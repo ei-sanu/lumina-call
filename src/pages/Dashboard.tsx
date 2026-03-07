@@ -30,7 +30,7 @@ const Dashboard = () => {
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border/50 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center gap-2 p-6 border-b border-border/50">
           <span className="font-display font-bold text-lg tracking-wide text-foreground">
-            NEXUS<span className="text-muted-foreground italic">Call</span>
+            NOVA<span className="text-muted-foreground italic">ARC</span>
           </span>
         </div>
         <nav className="p-4 space-y-1">

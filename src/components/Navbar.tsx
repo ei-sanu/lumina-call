@@ -25,7 +25,7 @@ const Navbar = () => {
       >
         <Link to="/" className="flex items-center gap-2">
           <span className="font-display font-bold text-lg tracking-wide text-foreground">
-            NEXUS<span className="text-muted-foreground italic">Call</span>
+            NOVA<span className="text-muted-foreground italic">ARC</span>
           </span>
         </Link>
 

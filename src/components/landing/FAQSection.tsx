@@ -10,8 +10,8 @@ const faqs = [
   { q: "How many people can join a meeting?", a: "Free users can host up to 10 participants. Premium tiers support 50–100 participants per meeting with additional collaboration features." },
   { q: "Is my data secure?", a: "Yes. All meetings are protected with end-to-end encryption. We never store or access your video or audio data." },
   { q: "Can I record meetings?", a: "Cloud recording is available on premium plans. Recordings are stored securely and accessible from your dashboard." },
-  { q: "Do I need to download anything?", a: "No. NexusCall works entirely in your browser. No downloads, plugins, or extensions required." },
-  { q: "What about mobile support?", a: "NexusCall is fully responsive and works on any modern mobile browser. Native apps are coming soon." },
+  { q: "Do I need to download anything?", a: "No. NovaArc works entirely in your browser. No downloads, plugins, or extensions required." },
+  { q: "What about mobile support?", a: "NovaArc is fully responsive and works on any modern mobile browser. Native apps are coming soon." },
   { q: "Is there a free plan?", a: "Yes. Start free with up to 10 participants and 40-minute meetings. Upgrade anytime for unlimited access." },
 ];
 

@@ -46,7 +46,7 @@ const Footer = () => {
         </div>
         <div className="divider-line mt-12 mb-8" />
         <div className="text-center text-xs text-muted-foreground">
-          © 2026 NexusCall. All rights reserved.
+          © 2026 NovaArc. All rights reserved.
         </div>
       </div>
     </footer>

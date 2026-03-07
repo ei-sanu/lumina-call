@@ -21,7 +21,7 @@ const Signup = () => {
         <div className="silk-overlay" />
         <div className="relative z-10 p-12">
           <span className="font-display font-bold text-2xl tracking-wide text-foreground block mb-4">
-            NEXUS<span className="text-muted-foreground italic">Call</span>
+            NOVA<span className="text-muted-foreground italic">ARC</span>
           </span>
           <h2 className="font-display text-4xl font-bold chrome-text-hero leading-tight">
             JOIN THE FUTURE<br />OF MEETINGS
