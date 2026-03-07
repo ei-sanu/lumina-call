@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-10">
           <div>
             <span className="font-display font-bold text-lg tracking-wide text-foreground block mb-3">
-              NEXUS<span className="text-muted-foreground italic">Call</span>
+              NOVA<span className="text-muted-foreground italic">ARC</span>
             </span>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Next-generation video conferencing for teams who demand excellence.
@@ -46,7 +46,7 @@ const Footer = () => {
         </div>
         <div className="divider-line mt-12 mb-8" />
         <div className="text-center text-xs text-muted-foreground">
-          © 2026 NexusCall. All rights reserved.
+          © 2026 NovaArc. All rights reserved.
         </div>
       </div>
     </footer>

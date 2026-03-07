@@ -5,11 +5,11 @@ import { ArrowLeft } from "lucide-react";
 const sections = [
   {
     title: "1. Acceptance of Terms",
-    content: "By accessing and using NexusCall, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to abide by these terms, please do not use this service. These terms apply to all visitors, users, and others who access or use the Service."
+    content: "By accessing and using NovaArc, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to abide by these terms, please do not use this service. These terms apply to all visitors, users, and others who access or use the Service."
   },
   {
     title: "2. Description of Service",
-    content: "NexusCall provides a web-based video conferencing platform that enables real-time audio, video, and text communication between users. The service includes features such as screen sharing, meeting recording, live chat, and participant management. We reserve the right to modify, suspend, or discontinue any aspect of the service at any time."
+    content: "NovaArc provides a web-based video conferencing platform that enables real-time audio, video, and text communication between users. The service includes features such as screen sharing, meeting recording, live chat, and participant management. We reserve the right to modify, suspend, or discontinue any aspect of the service at any time."
   },
   {
     title: "3. User Accounts",
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "6. Intellectual Property",
-    content: "The Service and its original content, features, and functionality are owned by NexusCall and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of our Service without express written permission."
+    content: "The Service and its original content, features, and functionality are owned by NovaArc and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of our Service without express written permission."
   },
   {
     title: "7. Payment Terms",
@@ -37,7 +37,7 @@ const sections = [
   },
   {
     title: "9. Limitation of Liability",
-    content: "In no event shall NexusCall be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising out of or in connection with your use of the Service. Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim."
+    content: "In no event shall NovaArc be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising out of or in connection with your use of the Service. Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim."
   },
   {
     title: "10. Changes to Terms",
@@ -68,7 +68,7 @@ const Terms = () => {
             TERMS & CONDITIONS
           </h1>
           <p className="text-muted-foreground text-sm mb-12">
-            Last updated: March 7, 2026 · Please read these terms carefully before using NexusCall.
+            Last updated: March 7, 2026 · Please read these terms carefully before using NovaArc.
           </p>
 
           <div className="space-y-10">
@@ -90,7 +90,7 @@ const Terms = () => {
           <div className="text-center">
             <p className="text-muted-foreground text-sm mb-4">
               Questions about our terms? Contact us at{" "}
-              <a href="mailto:legal@nexuscall.com" className="text-foreground hover:underline">legal@nexuscall.com</a>
+              <a href="mailto:legal@novaarc.com" className="text-foreground hover:underline">legal@novaarc.com</a>
             </p>
             <Link to="/signup">
               <button className="gradient-button px-6 py-3 rounded-xl text-sm">

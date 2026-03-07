@@ -48,7 +48,7 @@ const ContactSection = () => {
               </p>
             </div>
             {[
-              { label: "Email", value: "hello@nexuscall.com" },
+              { label: "Email", value: "hello@novaarc.com" },
               { label: "Response Time", value: "Within 24 hours" },
               { label: "Support", value: "24/7 for premium users" },
             ].map((item) => (
