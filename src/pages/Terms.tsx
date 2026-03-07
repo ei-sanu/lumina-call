@@ -9,7 +9,7 @@ const sections = [
   },
   {
     title: "2. Description of Service",
-    content: "NexusCall provides a web-based video conferencing platform that enables real-time audio, video, and text communication between users. The service includes features such as screen sharing, meeting recording, live chat, and participant management. We reserve the right to modify, suspend, or discontinue any aspect of the service at any time."
+    content: "NovaArc provides a web-based video conferencing platform that enables real-time audio, video, and text communication between users. The service includes features such as screen sharing, meeting recording, live chat, and participant management. We reserve the right to modify, suspend, or discontinue any aspect of the service at any time."
   },
   {
     title: "3. User Accounts",
