@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 const sections = [
   {
     title: "1. Acceptance of Terms",
-    content: "By accessing and using NexusCall, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to abide by these terms, please do not use this service. These terms apply to all visitors, users, and others who access or use the Service."
+    content: "By accessing and using NovaArc, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to abide by these terms, please do not use this service. These terms apply to all visitors, users, and others who access or use the Service."
   },
   {
     title: "2. Description of Service",
