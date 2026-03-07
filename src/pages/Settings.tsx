@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Camera, Bell, Volume2, Save, Shield } from "lucide-react";
 
 const Settings = () => {
-  const [name, setName] = useState("John Doe");
-  const [email] = useState("john@example.com");
+  const [name, setName] = useState("Arjun Mehta");
+  const [email] = useState("arjun@novaarc.com");
 
   return (
     <div className="min-h-screen bg-background">
