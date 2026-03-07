@@ -1,5 +1,6 @@
+import Navbar from "@/components/Navbar";
+import silkBg from "@/assets/silk-bg.jpg";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +15,11 @@ import {
   Copy,
   Link as LinkIcon,
   Loader2,
-  LogOut, Menu,
   Plus,
-  Settings,
   Video,
-  X
+  LogOut,
+  Settings,
+  UserCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -28,7 +29,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newMeetingOpen, setNewMeetingOpen] = useState(false);
   const [joinMeetingOpen, setJoinMeetingOpen] = useState(false);
   const [meetingTitle, setMeetingTitle] = useState("");
@@ -203,255 +203,295 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex">
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900/90 backdrop-blur-lg border-r border-gray-700 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex items-center gap-2 p-6 border-b border-gray-700">
-          <Video className="w-6 h-6 text-purple-500" />
-          <span className="font-bold text-lg text-white">
-            Lumina Call
-          </span>
-        </div>
+    <div className="min-h-screen relative isolate overflow-hidden">
+      {/* Animated silk background - matching hero section */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-background hero-animated-bg">
+        <motion.img
+          src={silkBg}
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover hero-silk-image"
+          animate={{ scale: [1, 1.07, 1], x: [0, 12, -10, 0], y: [0, -8, 10, 0] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <div className="noise-bg" />
+        <div className="hero-silk-layer" />
+        <motion.div
+          className="hero-shimmer-band"
+          animate={{ x: ["-35%", "130%"] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
+        />
+        <div className="hero-vignette" />
 
-        <nav className="p-4 space-y-1">
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm bg-purple-600 text-white font-medium"
-          >
-            <Video className="w-4 h-4" />
-            Meetings
-          </Link>
-          <Link
-            to="/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </Link>
-        </nav>
+        <motion.div
+          className="hero-blob hero-blob-1"
+          animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.08, 0.95, 1] }}
+          transition={{ duration: 20, ease: "easeInOut", repeat: Infinity }}
+        />
+        <motion.div
+          className="hero-blob hero-blob-2"
+          animate={{ x: [0, -35, 25, 0], y: [0, 25, -20, 0], scale: [1, 0.94, 1.05, 1] }}
+          transition={{ duration: 24, ease: "easeInOut", repeat: Infinity }}
+        />
+      </div>
 
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-gray-800 rounded-xl p-4 mb-4">
-            <p className="text-sm text-gray-400 mb-1">Signed in as</p>
-            <p className="text-white font-medium truncate">{user?.fullName || user?.username}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.primaryEmailAddress?.emailAddress}</p>
-          </div>
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Link>
-        </div>
-      </aside>
-
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Navbar */}
+      <Navbar />
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64">
-        <header className="h-16 border-b border-gray-700/50 flex items-center justify-between px-6 sticky top-0 z-20 bg-gray-900/80 backdrop-blur-lg">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden text-white" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            <h2 className="font-semibold text-white">Dashboard</h2>
-          </div>
-        </header>
+      <div className="relative z-10 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Welcome Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 glass-card px-5 py-2.5 mb-6 text-sm text-muted-foreground rounded-full">
+              <UserCircle className="w-4 h-4" />
+              Signed in as {user?.fullName || user?.username}
+            </div>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight mb-4">
+              <span className="chrome-text-hero block">YOUR MEETINGS</span>
+            </h1>
+            <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
+              Start an instant meeting, schedule for later, or join with a code
+            </p>
+          </motion.div>
 
-        <div className="p-6 space-y-8">
           {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="grid gap-4 md:grid-cols-3 mb-12"
           >
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors cursor-pointer" onClick={handleInstantMeeting}>
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-purple-600 rounded-lg">
-                      <Video className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-white">New Meeting</CardTitle>
-                      <CardDescription className="text-gray-400">Start an instant meeting</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
+            {/* New Meeting */}
+            <motion.button
+              onClick={handleInstantMeeting}
+              disabled={isCreating}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="glass-card p-6 text-left hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all duration-300 disabled:opacity-50"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <div className="p-3 bg-foreground/10 rounded-xl">
+                  <Video className="w-6 h-6 text-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg">New Meeting</h3>
+                  <p className="text-muted-foreground text-sm">Start an instant meeting</p>
+                </div>
+              </div>
+              {isCreating && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+            </motion.button>
 
-              <Dialog open={joinMeetingOpen} onOpenChange={setJoinMeetingOpen}>
-                <DialogTrigger asChild>
-                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors cursor-pointer">
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-green-600 rounded-lg">
-                          <LinkIcon className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-white">Join Meeting</CardTitle>
-                          <CardDescription className="text-gray-400">Enter a meeting code</CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-900 border-gray-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Join Meeting</DialogTitle>
-                    <DialogDescription className="text-gray-400">
-                      Enter the meeting code to join
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="join-code" className="text-white">Meeting Code</Label>
-                      <Input
-                        id="join-code"
-                        value={joinCode}
-                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                        placeholder="ABC123"
-                        className="bg-gray-800 border-gray-700 text-white mt-2"
-                        onKeyPress={(e) => e.key === 'Enter' && handleJoinMeeting()}
-                      />
+            {/* Join Meeting */}
+            <Dialog open={joinMeetingOpen} onOpenChange={setJoinMeetingOpen}>
+              <DialogTrigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="glass-card p-6 text-left hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-foreground/10 rounded-xl">
+                      <LinkIcon className="w-6 h-6 text-foreground" />
                     </div>
-                    <Button
-                      onClick={handleJoinMeeting}
-                      disabled={isJoining}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
-                    >
-                      {isJoining ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                      Join Meeting
-                    </Button>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-lg">Join Meeting</h3>
+                      <p className="text-muted-foreground text-sm">Enter a meeting code</p>
+                    </div>
                   </div>
-                </DialogContent>
-              </Dialog>
+                </motion.button>
+              </DialogTrigger>
+              <DialogContent className="glass border border-foreground/10">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-2xl chrome-text-hero">JOIN MEETING</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Enter the meeting code to join
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="join-code" className="text-foreground text-sm uppercase tracking-wide mb-2 block">Meeting Code</Label>
+                    <Input
+                      id="join-code"
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                      placeholder="ABC123"
+                      className="bg-background/50 border-foreground/20 text-foreground h-12 text-lg font-mono"
+                      onKeyPress={(e) => e.key === 'Enter' && handleJoinMeeting()}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleJoinMeeting}
+                    disabled={isJoining}
+                    className="w-full bg-foreground text-background hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] h-12 font-semibold"
+                  >
+                    {isJoining && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    Join Meeting
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-              <Dialog open={newMeetingOpen} onOpenChange={setNewMeetingOpen}>
-                <DialogTrigger asChild>
-                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors cursor-pointer">
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-blue-600 rounded-lg">
-                          <Plus className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-white">Schedule Meeting</CardTitle>
-                          <CardDescription className="text-gray-400">Plan for later</CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-900 border-gray-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Create New Meeting</DialogTitle>
-                    <DialogDescription className="text-gray-400">
-                      Set up a new meeting session
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="title" className="text-white">Meeting Title</Label>
-                      <Input
-                        id="title"
-                        value={meetingTitle}
-                        onChange={(e) => setMeetingTitle(e.target.value)}
-                        placeholder="Team Standup"
-                        className="bg-gray-800 border-gray-700 text-white mt-2"
-                      />
+            {/* Schedule Meeting */}
+            <Dialog open={newMeetingOpen} onOpenChange={setNewMeetingOpen}>
+              <DialogTrigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="glass-card p-6 text-left hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-foreground/10 rounded-xl">
+                      <Plus className="w-6 h-6 text-foreground" />
                     </div>
-                    <Button
-                      onClick={handleCreateMeeting}
-                      disabled={isCreating}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
-                    >
-                      {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                      Create Meeting
-                    </Button>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-lg">Schedule Meeting</h3>
+                      <p className="text-muted-foreground text-sm">Plan for later</p>
+                    </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                </motion.button>
+              </DialogTrigger>
+              <DialogContent className="glass border border-foreground/10">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-2xl chrome-text-hero">CREATE MEETING</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Set up a new meeting session
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="title" className="text-foreground text-sm uppercase tracking-wide mb-2 block">Meeting Title</Label>
+                    <Input
+                      id="title"
+                      value={meetingTitle}
+                      onChange={(e) => setMeetingTitle(e.target.value)}
+                      placeholder="Team Standup"
+                      className="bg-background/50 border-foreground/20 text-foreground h-12"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleCreateMeeting}
+                    disabled={isCreating}
+                    className="w-full bg-foreground text-background hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] h-12 font-semibold"
+                  >
+                    {isCreating && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    Create Meeting
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </motion.div>
 
           {/* Recent Meetings */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="glass-card p-6"
           >
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white">Recent Meetings</CardTitle>
-                <CardDescription className="text-gray-400">Your meeting history</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loadingMeetings ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
-                  </div>
-                ) : recentMeetings.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
-                    <Video className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>No meetings yet</p>
-                    <p className="text-sm mt-1">Start your first meeting above</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentMeetings.slice(0, 5).map((meeting) => (
-                      <div
-                        key={meeting.id}
-                        className="flex items-center justify-between p-4 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors group"
-                      >
-                        <div className="flex-1">
-                          <h4 className="text-white font-medium">{meeting.title}</h4>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {formatDate(meeting.created_at)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Copy className="w-3 h-3" />
-                              {meeting.invite_code}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => copyMeetingCode(meeting.invite_code)}
-                            className="text-gray-400 hover:text-white"
-                          >
-                            {copiedCode === meeting.invite_code ? (
-                              <Check className="w-4 h-4" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </Button>
-                          {meeting.status === 'active' && (
-                            <Button
-                              size="sm"
-                              onClick={() => navigate(`/meeting/${meeting.id}`)}
-                              className="bg-purple-600 hover:bg-purple-700"
-                            >
-                              Join
-                            </Button>
-                          )}
-                        </div>
+            <div className="mb-6">
+              <h2 className="font-display text-2xl chrome-text-hero mb-1">RECENT MEETINGS</h2>
+              <p className="text-muted-foreground text-sm">Your meeting history</p>
+            </div>
+
+            {loadingMeetings ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 text-foreground/50 animate-spin" />
+              </div>
+            ) : recentMeetings.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Video className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg mb-1">No meetings yet</p>
+                <p className="text-sm">Start your first meeting above</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentMeetings.slice(0, 5).map((meeting) => (
+                  <motion.div
+                    key={meeting.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center justify-between p-4 rounded-xl bg-background/30 border border-foreground/5 hover:border-foreground/20 hover:bg-background/50 transition-all group"
+                  >
+                    <div className="flex-1">
+                      <h4 className="text-foreground font-semibold text-lg">{meeting.title}</h4>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          {formatDate(meeting.created_at)}
+                        </span>
+                        <span className="flex items-center gap-1.5 font-mono">
+                          <Copy className="w-3.5 h-3.5" />
+                          {meeting.invite_code}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyMeetingCode(meeting.invite_code)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        {copiedCode === meeting.invite_code ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                      {meeting.status === 'active' && (
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/meeting/${meeting.id}`)}
+                          className="bg-foreground text-background hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                        >
+                          Join
+                        </Button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Quick Links */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="grid gap-4 md:grid-cols-2 mt-8"
+          >
+            <Link to="/settings">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="glass-card p-4 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-foreground font-medium">Settings</span>
+                </div>
+              </motion.div>
+            </Link>
+            <Link to="/">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="glass-card p-4 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <LogOut className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-foreground font-medium">Back to Home</span>
+                </div>
+              </motion.div>
+            </Link>
           </motion.div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-# Lumina Call
+# NovaArc
 
 A premium video conferencing platform built with React, TypeScript, and Vite.
 

@@ -2,7 +2,7 @@
     "name": "lumina-call-server",
     "version": "1.0.0",
     "type": "module",
-    "description": "WebRTC signaling server for Lumina Call",
+    "description": "WebRTC signaling server for NovaArc",
     "main": "index.js",
     "scripts": {
         "dev": "node --env-file=.env --watch index.js",

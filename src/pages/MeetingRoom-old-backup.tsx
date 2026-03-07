@@ -4,7 +4,6 @@ import { MeetingControls } from "@/components/meeting/MeetingControls";
 import { ParticipantsList } from "@/components/meeting/ParticipantsList";
 import { VideoParticipant } from "@/components/meeting/VideoParticipant";
 import Navbar from "@/components/Navbar";
-import silkBg from "@/assets/silk-bg.jpg";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +20,7 @@ import { useWebRTC } from "@/hooks/use-webrtc";
 import { addMeetingParticipant, endMeeting, getMeeting, updateParticipantLeftTime } from "@/lib/supabase";
 import { ChatMessage, Participant } from "@/types/meeting";
 import { useUser } from "@clerk/react";
-import { AlertCircle, Check, Copy, Grid, Loader2, Monitor, Sidebar as SidebarIcon, Users } from "lucide-react";
-import { motion } from "framer-motion";
+import { AlertCircle, Check, Copy, Grid, Loader2, Monitor, Sidebar as SidebarIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -145,6 +143,7 @@ const MeetingRoom = () => {
     });
 
     socket.on("hand-raised", (data: { userId: string; raised: boolean }) => {
+      // Handle other participants raising hand (could show notification)
       console.log("Hand raised:", data);
     });
 
@@ -185,10 +184,6 @@ const MeetingRoom = () => {
       navigate("/dashboard");
     });
 
-    socket.on("room-lock-changed", (data: { locked: boolean }) => {
-      setRoomLocked(data.locked);
-    });
-
     return () => {
       socket.off("chat-message");
       socket.off("hand-raised");
@@ -196,13 +191,13 @@ const MeetingRoom = () => {
       socket.off("removed-by-host");
       socket.off("room-locked");
       socket.off("meeting-ended-by-host");
-      socket.off("room-lock-changed");
     };
-  }, [socket, meetingId, userId, navigate]);
+  }, [socket]);
 
   // Convert participants Map to array for display
   const participantArray = useMemo(() => {
     const arr: Participant[] = Array.from(participants.values());
+    // Add current user if not in list
     const hasCurrentUser = arr.some((p) => p.userId === userId);
     if (!hasCurrentUser && localStream) {
       arr.unshift({
@@ -218,7 +213,7 @@ const MeetingRoom = () => {
       });
     }
     return arr;
-  }, [participants, userId, userName, audioEnabled, videoEnabled, isScreenSharing, handRaised, localStream, isHost, socket]);
+  }, [participants, userId, userName, audioEnabled, videoEnabled, isScreenSharing, handRaised, localStream, isHost]);
 
   const handleSendMessage = (message: string, recipientId?: string) => {
     if (socket && meetingId) {
@@ -356,23 +351,10 @@ const MeetingRoom = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen relative isolate overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 z-0 pointer-events-none bg-background hero-animated-bg">
-          <motion.img
-            src={silkBg}
-            alt=""
-            aria-hidden="true"
-            className="w-full h-full object-cover hero-silk-image"
-            animate={{ scale: [1, 1.07, 1], x: [0, 12, -10, 0], y: [0, -8, 10, 0] }}
-            transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <div className="noise-bg" />
-          <div className="hero-silk-layer" />
-          <div className="hero-vignette" />
-        </div>
-        <div className="text-center relative z-10">
-          <Loader2 className="w-12 h-12 text-foreground/50 animate-spin mx-auto mb-4" />
-          <p className="text-foreground text-lg font-display">Loading meeting...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg">Loading meeting...</p>
         </div>
       </div>
     );
@@ -380,174 +362,116 @@ const MeetingRoom = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen relative isolate overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 z-0 pointer-events-none bg-background hero-animated-bg">
-          <motion.img
-            src={silkBg}
-            alt=""
-            aria-hidden="true"
-            className="w-full h-full object-cover hero-silk-image"
-            animate={{ scale: [1, 1.07, 1], x: [0, 12, -10, 0], y: [0, -8, 10, 0] }}
-            transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <div className="noise-bg" />
-          <div className="hero-silk-layer" />
-          <div className="hero-vignette" />
-        </div>
-        <div className="text-center max-w-md relative z-10 glass-card p-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="font-display text-2xl chrome-text-hero mb-2">UNABLE TO JOIN</h2>
-          <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => navigate("/dashboard")} className="bg-foreground text-background">
-            Return to Dashboard
-          </Button>
+          <h2 className="text-white text-2xl font-bold mb-2">Unable to Join Meeting</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <Button onClick={() => navigate("/dashboard")}>Return to Dashboard</Button>
         </div>
       </div>
     );
   }
 
+  // Calculate grid layout based on number of participants
   const getGridCols = (count: number) => {
     if (count === 1) return "grid-cols-1";
-    if (count === 2) return "grid-cols-1 md:grid-cols-2";
-    if (count <= 4) return "grid-cols-1 sm:grid-cols-2";
-    if (count <= 6) return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
-    if (count <= 9) return "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3";
-    return "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4";
+    if (count === 2) return "grid-cols-2";
+    if (count <= 4) return "grid-cols-2";
+    if (count <= 9) return "grid-cols-3";
+    return "grid-cols-4";
   };
 
   return (
-    <div className="min-h-screen relative isolate overflow-hidden">
-      {/* Animated silk background - matching hero section */}
-      <div className="absolute inset-0 z-0 pointer-events-none bg-background hero-animated-bg">
-        <motion.img
-          src={silkBg}
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover hero-silk-image"
-          animate={{ scale: [1, 1.07, 1], x: [0, 12, -10, 0], y: [0, -8, 10, 0] }}
-          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div className="noise-bg" />
-        <div className="hero-silk-layer" />
-        <motion.div
-          className="hero-shimmer-band"
-          animate={{ x: ["-35%", "130%"] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
-        />
-        <div className="hero-vignette" />
-
-        <motion.div
-          className="hero-blob hero-blob-1"
-          animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.08, 0.95, 1] }}
-          transition={{ duration: 20, ease: "easeInOut", repeat: Infinity }}
-        />
-        <motion.div
-          className="hero-blob hero-blob-2"
-          animate={{ x: [0, -35, 25, 0], y: [0, 25, -20, 0], scale: [1, 0.94, 1.05, 1] }}
-          transition={{ duration: 24, ease: "easeInOut", repeat: Infinity }}
-        />
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
       {/* Navbar */}
       <Navbar />
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="fixed top-16 sm:top-20 left-0 right-0 z-30 glass border-b border-foreground/10"
-      >
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-          <div className="flex items-start md:items-center justify-between gap-2 sm:gap-3 md:gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="font-display text-base sm:text-lg md:text-2xl lg:text-3xl chrome-text-hero tracking-tight truncate">
-                {meetingTitle.toUpperCase()}
-              </h1>
-              <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-1.5 md:mt-2 flex-wrap">
-                <button
-                  onClick={copyInviteCode}
-                  className="glass-card px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-foreground hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center gap-1.5 sm:gap-2 transition-all"
-                >
-                  <span className="font-mono font-semibold">{inviteCode}</span>
-                  {copied ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" /> : <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
-                </button>
-                <button
-                  onClick={copyInviteLink}
-                  className="hidden sm:inline text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors underline"
-                >
-                  Share link
-                </button>
-              </div>
+      {/* Background Gradient Circles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+      </div>
+
+      {/* Header - adjusted top margin to account for Navbar */}
+      <div className="absolute top-20 left-0 right-0 z-30 backdrop-blur-md bg-white/10 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              {meetingTitle}
+            </h1>
+            <div className="flex items-center gap-3 mt-1">
+              <button
+                onClick={copyInviteCode}
+                className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-sm text-white hover:bg-white/20 flex items-center gap-2 transition-all"
+              >
+                <span className="font-mono">{inviteCode}</span>
+                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+              </button>
+              <button
+                onClick={copyInviteLink}
+                className="text-sm text-gray-300 hover:text-white transition-colors underline decoration-dotted"
+              >
+                Share invite link
+              </button>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+          </div>
+          <div className="flex items-center gap-3">
             {/* Layout Toggle */}
-            <div className="flex items-center gap-0.5 sm:gap-1 glass-card p-0.5 sm:p-1 rounded-lg">
+            <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-1">
               <button
                 onClick={() => setLayout('grid')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all ${
-                  layout === 'grid'
-                    ? 'bg-foreground/20 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/10'
-                }`}
+                className={`p-2 rounded transition-all ${layout === 'grid' ? 'bg-purple-500 text-white' : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
                 title="Grid View"
               >
-                <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Grid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setLayout('spotlight')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all ${
-                  layout === 'spotlight'
-                    ? 'bg-foreground/20 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/10'
-                }`}
+                className={`p-2 rounded transition-all ${layout === 'spotlight' ? 'bg-purple-500 text-white' : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
                 title="Spotlight View"
               >
-                <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Monitor className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setLayout('sidebar')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all ${
-                  layout === 'sidebar'
-                    ? 'bg-foreground/20 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/10'
-                }`}
+                className={`p-2 rounded transition-all ${layout === 'sidebar' ? 'bg-purple-500 text-white' : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
                 title="Sidebar View"
               >
-                <SidebarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <SidebarIcon className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Participant Count */}
-            <div className="flex items-center gap-1.5 sm:gap-2 glass-card px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-full">
-              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground" />
-              <span className="text-foreground text-xs sm:text-sm font-medium">{participantArray.length}</span>
+            <div className="flex items-center gap-2 bg-green-500/20 backdrop-blur-sm border border-green-500/30 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-green-400 text-sm font-medium">
+                {participantArray.length} in call
+              </span>
             </div>
-
-            {/* End Meeting (Host Only) */}
             {isHost && (
               <Button
                 onClick={handleEndMeetingForAll}
                 variant="destructive"
                 size="sm"
-                className="bg-red-500/90 hover:bg-red-600 text-white border-0 shadow-lg h-7 sm:h-8 md:h-9 text-xs sm:text-sm px-2 sm:px-3 md:px-4"
+                className="bg-red-500/80 hover:bg-red-600 backdrop-blur-sm"
               >
-                <span className="hidden sm:inline">End for All</span>
-                <span className="sm:hidden">End</span>
+                End for All
               </Button>
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Video Grid */}
-      <div className="relative z-10 min-h-screen pt-32 sm:pt-36 md:pt-40 pb-24 sm:pb-28 md:pb-32 px-3 sm:px-4 md:px-6">
+      {/* Video Grid - Different Layouts - adjusted top padding for Navbar */}
+      <div className="h-screen pt-36 pb-32 px-6">
         {layout === 'grid' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className={`min-h-[calc(100vh-16rem)] sm:min-h-[calc(100vh-18rem)] md:min-h-[calc(100vh-20rem)] grid gap-2 sm:gap-3 md:gap-4 ${getGridCols(participantArray.length)} auto-rows-fr max-w-7xl mx-auto`}
+          <div
+            className={`h-full grid gap-4 ${getGridCols(
+              participantArray.length
+            )} auto-rows-fr max-w-7xl mx-auto`}
           >
             {participantArray.map((participant) => (
               <VideoParticipant
@@ -557,17 +481,13 @@ const MeetingRoom = () => {
                 stream={participant.stream}
               />
             ))}
-          </motion.div>
+          </div>
         )}
 
         {layout === 'spotlight' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="min-h-[calc(100vh-16rem)] sm:min-h-[calc(100vh-18rem)] md:min-h-[calc(100vh-20rem)] flex flex-col gap-2 sm:gap-3 md:gap-4 max-w-7xl mx-auto"
-          >
-            <div className="flex-1 min-h-0">
+          <div className="h-full flex flex-col gap-4 max-w-7xl mx-auto">
+            {/* Main spotlight participant */}
+            <div className="flex-1">
               {participantArray[0] && (
                 <VideoParticipant
                   key={participantArray[0].userId}
@@ -577,10 +497,11 @@ const MeetingRoom = () => {
                 />
               )}
             </div>
+            {/* Thumbnail row */}
             {participantArray.length > 1 && (
-              <div className="h-20 sm:h-24 md:h-28 lg:h-32 flex gap-2 overflow-x-auto pb-1 sm:pb-2">
+              <div className="h-32 flex gap-2 overflow-x-auto pb-2">
                 {participantArray.slice(1).map((participant) => (
-                  <div key={participant.userId} className="w-28 sm:w-32 md:w-36 lg:w-40 flex-shrink-0">
+                  <div key={participant.userId} className="w-40 flex-shrink-0">
                     <VideoParticipant
                       participant={participant}
                       isLocal={participant.userId === userId}
@@ -590,17 +511,13 @@ const MeetingRoom = () => {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
         {layout === 'sidebar' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="min-h-[calc(100vh-16rem)] sm:min-h-[calc(100vh-18rem)] md:min-h-[calc(100vh-20rem)] flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 max-w-7xl mx-auto"
-          >
-            <div className="flex-1 min-h-0">
+          <div className="h-full flex gap-4 max-w-7xl mx-auto">
+            {/* Main view */}
+            <div className="flex-1">
               {participantArray[0] && (
                 <VideoParticipant
                   key={participantArray[0].userId}
@@ -610,10 +527,11 @@ const MeetingRoom = () => {
                 />
               )}
             </div>
+            {/* Sidebar */}
             {participantArray.length > 1 && (
-              <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto sm:overflow-x-visible w-full sm:w-40 md:w-48 lg:w-56 xl:w-64 pb-1 sm:pb-0">
+              <div className="w-64 flex flex-col gap-2 overflow-y-auto">
                 {participantArray.slice(1).map((participant) => (
-                  <div key={participant.userId} className="aspect-video flex-shrink-0 w-28 sm:w-full">
+                  <div key={participant.userId} className="aspect-video">
                     <VideoParticipant
                       participant={participant}
                       isLocal={participant.userId === userId}
@@ -623,7 +541,7 @@ const MeetingRoom = () => {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
       </div>
 
@@ -687,18 +605,15 @@ const MeetingRoom = () => {
 
       {/* Left Meeting Dialog */}
       <AlertDialog open={showLeftDialog}>
-        <AlertDialogContent className="glass border border-foreground/10">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-xl chrome-text-hero">MEETING LEFT</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
+            <AlertDialogTitle>You left the meeting</AlertDialogTitle>
+            <AlertDialogDescription>
               You have successfully left the meeting. Returning to dashboard...
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={() => navigate("/dashboard")}
-              className="bg-foreground text-background"
-            >
+            <AlertDialogAction onClick={() => navigate("/dashboard")}>
               Go to Dashboard
             </AlertDialogAction>
           </AlertDialogFooter>

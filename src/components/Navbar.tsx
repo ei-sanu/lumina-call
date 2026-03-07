@@ -35,8 +35,8 @@ const Navbar = ({ onOpenAuth }: NavbarProps) => {
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop nav - centered navigation links */}
+        <div className="hidden md:flex items-center justify-center gap-8 flex-1">
           {isLanding && navLinks.map((link) => (
             <a
               key={link.label}
@@ -46,6 +46,10 @@ const Navbar = ({ onOpenAuth }: NavbarProps) => {
               {link.label}
             </a>
           ))}
+        </div>
+
+        {/* Desktop auth buttons */}
+        <div className="hidden md:flex items-center gap-4">
           {isSignedIn ? (
             <Link to="/dashboard">
               <button className="bg-foreground text-background px-5 py-2 rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300">

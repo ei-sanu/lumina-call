@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Starting Lumina Call..."
+echo "🚀 Starting NovaArc..."
 echo ""
 echo "Starting Backend Server on port 3001..."
 cd server && npm run dev &

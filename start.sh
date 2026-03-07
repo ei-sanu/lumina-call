@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Lumina Call - Quick Start Script
+# NovaArc - Quick Start Script
 # This script helps you get the application running quickly
 
-echo "🚀 Lumina Call - Quick Start Script"
+echo "🚀 NovaArc - Quick Start Script"
 echo "===================================="
 echo ""
 
