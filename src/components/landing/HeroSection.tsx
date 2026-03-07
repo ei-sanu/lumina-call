@@ -64,7 +64,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed"
         >
-          Crystal-clear video conferencing built for teams who demand excellence, so you can focus on what matters.
+          We built NovaArc because every other video tool felt bloated, slow, or just&hellip; off. This one doesn't. Try it free, no strings attached.
         </motion.p>
 
         <motion.div

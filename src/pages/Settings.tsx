@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Camera, Bell, Volume2, Save, Shield } from "lucide-react";
 
 const Settings = () => {
-  const [name, setName] = useState("John Doe");
-  const [email] = useState("john@example.com");
+  const [name, setName] = useState("Arjun Mehta");
+  const [email] = useState("arjun@novaarc.com");
 
   return (
     <div className="min-h-screen bg-background">
@@ -27,7 +27,7 @@ const Settings = () => {
             </h2>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center border border-border/50">
-                <span className="font-display text-xl font-semibold text-foreground">JD</span>
+                <span className="font-display text-xl font-semibold text-foreground">AM</span>
               </div>
               <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">Change avatar</button>
             </div>

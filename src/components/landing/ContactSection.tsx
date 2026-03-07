@@ -42,9 +42,9 @@ const ContactSection = () => {
           {/* Info */}
           <div className="space-y-8">
             <div>
-              <h3 className="font-display text-xl font-semibold text-foreground mb-3">Ready to transform your meetings?</h3>
+              <h3 className="font-display text-xl font-semibold text-foreground mb-3">We'd love to hear from you</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Whether you have questions about features, pricing, or need a demo — our team is ready to help you get started.
+                Got questions about our platform, need help picking a plan, or want to see a live walkthrough? Drop us a line — we typically reply the same day.
               </p>
             </div>
             {[
@@ -66,8 +66,8 @@ const ContactSection = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {[
-              { name: "name", label: "Your Name", type: "text", placeholder: "John Doe" },
-              { name: "email", label: "Email Address", type: "email", placeholder: "john@example.com" },
+              { name: "name", label: "Your Name", type: "text", placeholder: "e.g. Arjun Mehta" },
+              { name: "email", label: "Email Address", type: "email", placeholder: "arjun@company.com" },
             ].map((field) => (
               <div key={field.name}>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">{field.label}</label>

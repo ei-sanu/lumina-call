@@ -71,7 +71,7 @@ const Signup = () => {
               <label className="text-xs font-medium text-muted-foreground block mb-2 uppercase tracking-wider">Full Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="text" placeholder="John Doe" className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 transition-all" />
+                <input type="text" placeholder="Your full name" className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 transition-all" />
               </div>
             </div>
             <div>

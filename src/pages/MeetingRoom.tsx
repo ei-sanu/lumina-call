@@ -8,18 +8,18 @@ import {
 } from "lucide-react";
 
 const mockParticipants = [
-  { id: 1, name: "You", initials: "JD", muted: false, videoOn: true },
-  { id: 2, name: "Sarah Chen", initials: "SC", muted: true, videoOn: true },
-  { id: 3, name: "Mike Peters", initials: "MP", muted: false, videoOn: false },
-  { id: 4, name: "Lisa Wong", initials: "LW", muted: true, videoOn: true },
-  { id: 5, name: "Alex Rivera", initials: "AR", muted: false, videoOn: true },
-  { id: 6, name: "Emma Davis", initials: "ED", muted: true, videoOn: false },
+  { id: 1, name: "You", initials: "AM", muted: false, videoOn: true },
+  { id: 2, name: "Priya Sharma", initials: "PS", muted: true, videoOn: true },
+  { id: 3, name: "Ravi Kapoor", initials: "RK", muted: false, videoOn: false },
+  { id: 4, name: "Neha Gupta", initials: "NG", muted: true, videoOn: true },
+  { id: 5, name: "Aditya Rao", initials: "AR", muted: false, videoOn: true },
+  { id: 6, name: "Meera Joshi", initials: "MJ", muted: true, videoOn: false },
 ];
 
 const mockMessages = [
-  { id: 1, sender: "Sarah Chen", text: "Can everyone see my screen?", time: "2:05 PM" },
-  { id: 2, sender: "Mike Peters", text: "Yes, looks great!", time: "2:05 PM" },
-  { id: 3, sender: "Lisa Wong", text: "Could you zoom in on the chart?", time: "2:06 PM" },
+  { id: 1, sender: "Priya Sharma", text: "Can everyone see the updated mockups?", time: "2:05 PM" },
+  { id: 2, sender: "Ravi Kapoor", text: "Yep, looking sharp — nice work on the nav.", time: "2:05 PM" },
+  { id: 3, sender: "Neha Gupta", text: "Could you zoom in on the metrics section?", time: "2:06 PM" },
 ];
 
 const MeetingRoom = () => {
@@ -174,8 +174,8 @@ const MeetingRoom = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   <div className="bg-muted/30 p-4 rounded-xl space-y-3 border border-border/30">
                     {[
-                      { label: "Meeting ID", value: "NXC-482-719" },
-                      { label: "Host", value: "You (John Doe)" },
+                      { label: "Meeting ID", value: "ARC-482-719" },
+                      { label: "Host", value: "You (Arjun Mehta)" },
                       { label: "Started", value: "2:00 PM" },
                       { label: "Encryption", value: "End-to-end" },
                     ].map((info) => (

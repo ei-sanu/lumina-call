@@ -10,7 +10,7 @@ const Footer = () => {
               NOVA<span className="text-muted-foreground italic">ARC</span>
             </span>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Next-generation video conferencing for teams who demand excellence.
+              Video meetings that don't make you want to throw your laptop out the window.
             </p>
           </div>
           {[
