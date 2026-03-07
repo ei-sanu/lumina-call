@@ -1,4 +1,3 @@
-import { Video } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -7,36 +6,46 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-10">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg gradient-button flex items-center justify-center">
-                <Video className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display font-bold text-lg text-foreground">NexusCall</span>
-            </div>
+            <span className="font-display font-bold text-lg tracking-wide text-foreground block mb-3">
+              NEXUS<span className="text-muted-foreground italic">Call</span>
+            </span>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Next-generation video conferencing for teams who demand excellence.
             </p>
           </div>
           {[
-            { title: "Product", links: ["Features", "Pricing", "Security", "Changelog"] },
-            { title: "Company", links: ["About", "Blog", "Careers", "Press"] },
-            { title: "Legal", links: ["Privacy", "Terms", "Cookies", "GDPR"] },
+            { title: "Product", links: [
+              { label: "Features", href: "/#features" },
+              { label: "How It Works", href: "/#how-it-works" },
+              { label: "FAQ", href: "/#faq" },
+            ]},
+            { title: "Company", links: [
+              { label: "About", href: "#" },
+              { label: "Blog", href: "#" },
+              { label: "Careers", href: "#" },
+            ]},
+            { title: "Legal", links: [
+              { label: "Privacy Policy", href: "/terms" },
+              { label: "Terms of Service", href: "/terms" },
+              { label: "Cookie Policy", href: "/terms" },
+            ]},
           ].map((col) => (
             <div key={col.title}>
-              <h4 className="font-display font-semibold text-foreground mb-4">{col.title}</h4>
+              <h4 className="font-display font-semibold text-foreground mb-4 text-sm tracking-wide uppercase">{col.title}</h4>
               <ul className="space-y-2">
                 {col.links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {link}
-                    </a>
+                  <li key={link.label}>
+                    <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300">
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        <div className="border-t border-border/50 mt-12 pt-8 text-center text-sm text-muted-foreground">
+        <div className="divider-line mt-12 mb-8" />
+        <div className="text-center text-xs text-muted-foreground">
           © 2026 NexusCall. All rights reserved.
         </div>
       </div>
