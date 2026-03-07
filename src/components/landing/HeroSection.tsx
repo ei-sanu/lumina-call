@@ -1,19 +1,15 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Mouse } from "lucide-react";
-import silkBg from "@/assets/silk-bg.jpg";
 
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Silk background */}
-      <div className="absolute inset-0 -z-10">
-        <img
-          src={silkBg}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="silk-overlay" />
+      {/* Animated grey background */}
+      <div className="absolute inset-0 -z-10 bg-background">
+        <div className="noise-bg" />
+        <div className="gradient-orb gradient-orb-1" />
+        <div className="gradient-orb gradient-orb-2" />
+        <div className="gradient-orb gradient-orb-3" />
       </div>
 
       <div className="container mx-auto px-4 text-center relative z-10 flex-1 flex flex-col items-center justify-center">
@@ -24,7 +20,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8 }}
         >
           <div className="inline-flex items-center gap-2 glass-card px-5 py-2.5 mb-10 text-sm text-muted-foreground rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-foreground" />
+            <span className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse" />
             Video Conferencing Platform
           </div>
         </motion.div>
@@ -37,7 +33,7 @@ const HeroSection = () => {
           className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl leading-[0.9] tracking-tight mb-6"
         >
           <span className="chrome-text-hero block">MEETINGS THAT</span>
-          <span className="chrome-text block" style={{ opacity: 0.6 }}>SPEAK FOR THEMSELVES</span>
+          <span className="chrome-text block" style={{ opacity: 0.5 }}>SPEAK FOR THEMSELVES</span>
         </motion.h1>
 
         {/* Sub text */}
@@ -51,33 +47,19 @@ const HeroSection = () => {
           excellence, so you can focus on what matters.
         </motion.p>
 
-        {/* CTA */}
+        {/* CTA - White button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.45 }}
         >
           <Link to="/signup">
-            <button className="ghost-button text-sm">
+            <button className="bg-foreground text-background px-8 py-3.5 rounded-full text-sm font-semibold hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-500 hover:scale-105">
               Start Free Now
             </button>
           </Link>
         </motion.div>
       </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1 }}
-        className="relative z-10 pb-10 flex flex-col items-center gap-3"
-      >
-        <div className="divider-line w-32" />
-        <span className="text-xs text-muted-foreground tracking-widest uppercase">Scroll down</span>
-        <Mouse className="w-5 h-5 text-muted-foreground animate-scroll-hint" />
-        <span className="text-xs text-muted-foreground tracking-widest uppercase">to explore</span>
-        <div className="divider-line w-32" />
-      </motion.div>
     </section>
   );
 };
