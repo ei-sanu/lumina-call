@@ -4,9 +4,9 @@ import silkBg from "@/assets/silk-bg.jpg";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section className="relative isolate min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Animated grey silk background */}
-      <div className="absolute inset-0 -z-10 bg-background hero-animated-bg">
+      <div className="absolute inset-0 z-0 pointer-events-none bg-background hero-animated-bg">
         <motion.img
           src={silkBg}
           alt=""
