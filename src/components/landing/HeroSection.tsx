@@ -5,15 +5,29 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Animated grey background */}
-      <div className="absolute inset-0 -z-10 bg-background">
+      <div className="absolute inset-0 -z-10 bg-background hero-animated-bg">
         <div className="noise-bg" />
-        <div className="gradient-orb gradient-orb-1" />
-        <div className="gradient-orb gradient-orb-2" />
-        <div className="gradient-orb gradient-orb-3" />
+        <div className="hero-silk-layer" />
+        <div className="hero-vignette" />
+
+        <motion.div
+          className="hero-blob hero-blob-1"
+          animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.08, 0.95, 1] }}
+          transition={{ duration: 20, ease: "easeInOut", repeat: Infinity }}
+        />
+        <motion.div
+          className="hero-blob hero-blob-2"
+          animate={{ x: [0, -35, 25, 0], y: [0, 25, -20, 0], scale: [1, 0.94, 1.05, 1] }}
+          transition={{ duration: 24, ease: "easeInOut", repeat: Infinity }}
+        />
+        <motion.div
+          className="hero-blob hero-blob-3"
+          animate={{ x: [0, 28, -22, 0], y: [0, -18, 24, 0], scale: [1, 1.06, 0.96, 1] }}
+          transition={{ duration: 18, ease: "easeInOut", repeat: Infinity }}
+        />
       </div>
 
       <div className="container mx-auto px-4 text-center relative z-10 flex-1 flex flex-col items-center justify-center">
-        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -25,7 +39,6 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -36,18 +49,15 @@ const HeroSection = () => {
           <span className="chrome-text block" style={{ opacity: 0.5 }}>SPEAK FOR THEMSELVES</span>
         </motion.h1>
 
-        {/* Sub text */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed"
         >
-          Crystal-clear video conferencing built for teams who demand
-          excellence, so you can focus on what matters.
+          Crystal-clear video conferencing built for teams who demand excellence, so you can focus on what matters.
         </motion.p>
 
-        {/* CTA - White button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -65,3 +75,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
