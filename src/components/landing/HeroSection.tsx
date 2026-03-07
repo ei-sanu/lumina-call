@@ -1,13 +1,27 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import silkBg from "@/assets/silk-bg.jpg";
 
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Animated grey background */}
+      {/* Animated grey silk background */}
       <div className="absolute inset-0 -z-10 bg-background hero-animated-bg">
+        <motion.img
+          src={silkBg}
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover hero-silk-image"
+          animate={{ scale: [1, 1.07, 1], x: [0, 12, -10, 0], y: [0, -8, 10, 0] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        />
         <div className="noise-bg" />
         <div className="hero-silk-layer" />
+        <motion.div
+          className="hero-shimmer-band"
+          animate={{ x: ["-35%", "130%"] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
+        />
         <div className="hero-vignette" />
 
         <motion.div
@@ -19,11 +33,6 @@ const HeroSection = () => {
           className="hero-blob hero-blob-2"
           animate={{ x: [0, -35, 25, 0], y: [0, 25, -20, 0], scale: [1, 0.94, 1.05, 1] }}
           transition={{ duration: 24, ease: "easeInOut", repeat: Infinity }}
-        />
-        <motion.div
-          className="hero-blob hero-blob-3"
-          animate={{ x: [0, 28, -22, 0], y: [0, -18, 24, 0], scale: [1, 1.06, 0.96, 1] }}
-          transition={{ duration: 18, ease: "easeInOut", repeat: Infinity }}
         />
       </div>
 
