@@ -53,14 +53,14 @@ Grid container:
 ### 7. **Spotlight Layout**
 - **Container**: Responsive min-height calculations
 - **Main video**: `flex-1 min-h-0` for proper sizing
-- **Thumbnail strip**: 
+- **Thumbnail strip**:
   - Height: Responsive `h-20 sm:h-24 md:h-28 lg:h-32`
   - Thumbnail width: Responsive `w-28 sm:w-32 md:w-36 lg:w-40`
   - Padding: Responsive `pb-1 sm:pb-2`
 - **Gap**: Responsive `gap-2 sm:gap-3 md:gap-4`
 
 ### 8. **Sidebar Layout**
-- **Container**: 
+- **Container**:
   - Direction: `flex-col sm:flex-row` (vertical on mobile, horizontal on desktop)
   - Min height: Responsive calc values
   - Gap: Responsive `gap-2 sm:gap-3 md:gap-4`

@@ -18,10 +18,23 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        if (videoRef.current && stream) {
-            videoRef.current.srcObject = stream;
+        const videoElement = videoRef.current;
+        if (videoElement && stream) {
+            console.log('Setting video stream for:', participant.userName, 'tracks:', stream.getTracks());
+            videoElement.srcObject = stream;
+
+            // Explicitly play the video
+            videoElement.play().catch((error) => {
+                console.error('Error playing video:', error);
+            });
         }
-    }, [stream]);
+
+        return () => {
+            if (videoElement) {
+                videoElement.srcObject = null;
+            }
+        };
+    }, [stream, participant.userName]);
 
     const initials = participant.userName
         .split(' ')

@@ -1,10 +1,10 @@
+import silkBg from "@/assets/silk-bg.jpg";
 import { ChatPanel } from "@/components/meeting/ChatPanel";
 import { HostControlsPanel } from "@/components/meeting/HostControlsPanel";
 import { MeetingControls } from "@/components/meeting/MeetingControls";
 import { ParticipantsList } from "@/components/meeting/ParticipantsList";
 import { VideoParticipant } from "@/components/meeting/VideoParticipant";
 import Navbar from "@/components/Navbar";
-import silkBg from "@/assets/silk-bg.jpg";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,9 +21,9 @@ import { useWebRTC } from "@/hooks/use-webrtc";
 import { addMeetingParticipant, endMeeting, getMeeting, updateParticipantLeftTime } from "@/lib/supabase";
 import { ChatMessage, Participant } from "@/types/meeting";
 import { useUser } from "@clerk/react";
-import { AlertCircle, Check, Copy, Grid, Loader2, Monitor, Sidebar as SidebarIcon, Users } from "lucide-react";
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const MeetingRoom = () => {
@@ -47,6 +47,8 @@ const MeetingRoom = () => {
   const [layout, setLayout] = useState<'grid' | 'spotlight' | 'sidebar'>('grid');
   const [hostControlsOpen, setHostControlsOpen] = useState(false);
   const [roomLocked, setRoomLocked] = useState(false);
+
+  const mediaInitialized = useRef(false);
 
   const userId = user?.id || "guest";
   const userName = user?.fullName || user?.username || "Guest User";
@@ -98,10 +100,12 @@ const MeetingRoom = () => {
   // Initialize media and join room
   useEffect(() => {
     const init = async () => {
-      if (!socket || !isConnected || !meetingId || isLoading) return;
+      if (!socket || !isConnected || !meetingId || isLoading || mediaInitialized.current) return;
 
       try {
+        console.log('Initializing media and joining room...');
         await initializeMedia();
+        mediaInitialized.current = true;
 
         // Join the room via socket
         socket.emit("join-room", {
@@ -128,13 +132,14 @@ const MeetingRoom = () => {
     init();
 
     return () => {
-      if (socket && meetingId) {
+      if (socket && meetingId && mediaInitialized.current) {
         socket.emit("leave-room");
         updateParticipantLeftTime(meetingId, userId);
       }
       cleanup();
+      mediaInitialized.current = false;
     };
-  }, [socket, isConnected, meetingId, isLoading]);
+  }, [socket, isConnected, meetingId, isLoading, initializeMedia, userId, userName, isHost, toast, cleanup]);
 
   // Socket event listeners for chat and other features
   useEffect(() => {
@@ -448,106 +453,29 @@ const MeetingRoom = () => {
         />
       </div>
 
-      {/* Navbar */}
-      <Navbar />
+      {/* Navbar with meeting controls */}
+      <Navbar
+        meetingTitle={meetingTitle}
+        inviteCode={inviteCode}
+        participantCount={participantArray.length}
+        isHost={isHost}
+        layout={layout}
+        onLayoutChange={setLayout}
+        onCopyInviteCode={copyInviteCode}
+        onCopyInviteLink={copyInviteLink}
+        onEndMeeting={handleEndMeetingForAll}
+        copied={copied}
+      />
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="fixed top-16 sm:top-20 left-0 right-0 z-30 glass border-b border-foreground/10"
-      >
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
-          <div className="flex items-start md:items-center justify-between gap-2 sm:gap-3 md:gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="font-display text-base sm:text-lg md:text-2xl lg:text-3xl chrome-text-hero tracking-tight truncate">
-                {meetingTitle.toUpperCase()}
-              </h1>
-              <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-1.5 md:mt-2 flex-wrap">
-                <button
-                  onClick={copyInviteCode}
-                  className="glass-card px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-foreground hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center gap-1.5 sm:gap-2 transition-all"
-                >
-                  <span className="font-mono font-semibold">{inviteCode}</span>
-                  {copied ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" /> : <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
-                </button>
-                <button
-                  onClick={copyInviteLink}
-                  className="hidden sm:inline text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors underline"
-                >
-                  Share link
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-            {/* Layout Toggle */}
-            <div className="flex items-center gap-0.5 sm:gap-1 glass-card p-0.5 sm:p-1 rounded-lg">
-              <button
-                onClick={() => setLayout('grid')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all ${
-                  layout === 'grid'
-                    ? 'bg-foreground/20 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/10'
-                }`}
-                title="Grid View"
-              >
-                <Grid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-              <button
-                onClick={() => setLayout('spotlight')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all ${
-                  layout === 'spotlight'
-                    ? 'bg-foreground/20 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/10'
-                }`}
-                title="Spotlight View"
-              >
-                <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-              <button
-                onClick={() => setLayout('sidebar')}
-                className={`p-1.5 sm:p-2 rounded-md transition-all ${
-                  layout === 'sidebar'
-                    ? 'bg-foreground/20 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/10'
-                }`}
-                title="Sidebar View"
-              >
-                <SidebarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-            </div>
-
-            {/* Participant Count */}
-            <div className="flex items-center gap-1.5 sm:gap-2 glass-card px-2 sm:px-2.5 md:px-3 py-1.5 sm:py-2 rounded-full">
-              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground" />
-              <span className="text-foreground text-xs sm:text-sm font-medium">{participantArray.length}</span>
-            </div>
-
-            {/* End Meeting (Host Only) */}
-            {isHost && (
-              <Button
-                onClick={handleEndMeetingForAll}
-                variant="destructive"
-                size="sm"
-                className="bg-red-500/90 hover:bg-red-600 text-white border-0 shadow-lg h-7 sm:h-8 md:h-9 text-xs sm:text-sm px-2 sm:px-3 md:px-4"
-              >
-                <span className="hidden sm:inline">End for All</span>
-                <span className="sm:hidden">End</span>
-              </Button>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Video Grid */}
-      <div className="relative z-10 min-h-screen pt-32 sm:pt-36 md:pt-40 pb-24 sm:pb-28 md:pb-32 px-3 sm:px-4 md:px-6">
+      {/* Video Grid - Properly sized layout */}
+      <div className="fixed top-24 left-0 right-0 bottom-0 z-10 pb-44 sm:pb-48 px-3 sm:px-6 pt-3 sm:pt-4 overflow-hidden">
         {layout === 'grid' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className={`min-h-[calc(100vh-16rem)] sm:min-h-[calc(100vh-18rem)] md:min-h-[calc(100vh-20rem)] grid gap-2 sm:gap-3 md:gap-4 ${getGridCols(participantArray.length)} auto-rows-fr max-w-7xl mx-auto`}
+            className={`h-full w-full grid gap-3 sm:gap-4 ${getGridCols(participantArray.length)} max-w-6xl mx-auto [&>*]:max-h-[280px] sm:[&>*]:max-h-[320px] lg:[&>*]:max-h-[350px]`}
+            style={{ gridAutoRows: 'minmax(0, 1fr)' }}
           >
             {participantArray.map((participant) => (
               <VideoParticipant
@@ -565,9 +493,9 @@ const MeetingRoom = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="min-h-[calc(100vh-16rem)] sm:min-h-[calc(100vh-18rem)] md:min-h-[calc(100vh-20rem)] flex flex-col gap-2 sm:gap-3 md:gap-4 max-w-7xl mx-auto"
+            className="h-full flex flex-col gap-3 sm:gap-4 max-w-6xl mx-auto"
           >
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 max-h-[calc(100%-10rem)]">
               {participantArray[0] && (
                 <VideoParticipant
                   key={participantArray[0].userId}
@@ -578,9 +506,9 @@ const MeetingRoom = () => {
               )}
             </div>
             {participantArray.length > 1 && (
-              <div className="h-20 sm:h-24 md:h-28 lg:h-32 flex gap-2 overflow-x-auto pb-1 sm:pb-2">
+              <div className="h-28 sm:h-32 flex gap-3 overflow-x-auto pb-2">
                 {participantArray.slice(1).map((participant) => (
-                  <div key={participant.userId} className="w-28 sm:w-32 md:w-36 lg:w-40 flex-shrink-0">
+                  <div key={participant.userId} className="w-36 sm:w-40 md:w-44 flex-shrink-0">
                     <VideoParticipant
                       participant={participant}
                       isLocal={participant.userId === userId}
@@ -598,9 +526,9 @@ const MeetingRoom = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="min-h-[calc(100vh-16rem)] sm:min-h-[calc(100vh-18rem)] md:min-h-[calc(100vh-20rem)] flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 max-w-7xl mx-auto"
+            className="h-full flex gap-3 sm:gap-4 max-w-6xl mx-auto"
           >
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 max-h-full">
               {participantArray[0] && (
                 <VideoParticipant
                   key={participantArray[0].userId}
@@ -611,9 +539,9 @@ const MeetingRoom = () => {
               )}
             </div>
             {participantArray.length > 1 && (
-              <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto sm:overflow-x-visible w-full sm:w-40 md:w-48 lg:w-56 xl:w-64 pb-1 sm:pb-0">
+              <div className="flex flex-col gap-3 overflow-y-auto w-52 sm:w-60 md:w-64 pr-2">
                 {participantArray.slice(1).map((participant) => (
-                  <div key={participant.userId} className="aspect-video flex-shrink-0 w-28 sm:w-full">
+                  <div key={participant.userId} className="aspect-video flex-shrink-0">
                     <VideoParticipant
                       participant={participant}
                       isLocal={participant.userId === userId}

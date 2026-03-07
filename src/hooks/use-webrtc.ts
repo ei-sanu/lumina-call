@@ -1,5 +1,5 @@
 import { Participant, PeerConnection } from '@/types/meeting';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
 
 const ICE_SERVERS = {
@@ -54,22 +54,24 @@ export const useWebRTC = (
 
             localStreamRef.current = stream;
             setLocalStream(stream);
-            
-            // Set initial enabled states
-            if (audioTrackRef.current) audioTrackRef.current.enabled = audioEnabled;
-            if (videoTrackRef.current) videoTrackRef.current.enabled = videoEnabled;
+
+            // Set initial enabled states to true
+            if (audioTrackRef.current) audioTrackRef.current.enabled = true;
+            if (videoTrackRef.current) videoTrackRef.current.enabled = true;
+
+            console.log('Media tracks enabled - Audio:', audioTrackRef.current?.enabled, 'Video:', videoTrackRef.current?.enabled);
 
             return stream;
         } catch (error) {
             console.error('Error accessing media devices:', error);
             throw error;
         }
-    }, [audioEnabled, videoEnabled]);
+    }, []);
 
     // Create peer connection
     const createPeerConnection = useCallback((peerId: string, peerUserId: string): RTCPeerConnection => {
         console.log('Creating peer connection for:', peerId);
-        
+
         const peerConnection = new RTCPeerConnection(ICE_SERVERS);
 
         // Add local stream tracks to peer connection
@@ -84,7 +86,7 @@ export const useWebRTC = (
         peerConnection.ontrack = (event) => {
             console.log('Received remote track:', event.track.kind, 'from:', peerId);
             const [remoteStream] = event.streams;
-            
+
             setParticipants((prev) => {
                 const updated = new Map(prev);
                 const participant = updated.get(peerUserId);
@@ -154,7 +156,7 @@ export const useWebRTC = (
                     offerToReceiveAudio: true,
                     offerToReceiveVideo: true,
                 });
-                
+
                 await peerConnection.setLocalDescription(offer);
 
                 socket.emit('offer', {
@@ -178,7 +180,7 @@ export const useWebRTC = (
 
         try {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-            
+
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
 
@@ -385,7 +387,7 @@ export const useWebRTC = (
     // Cleanup
     const cleanup = useCallback(() => {
         console.log('Cleaning up WebRTC connections...');
-        
+
         // Stop local stream
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach((track) => {
@@ -410,7 +412,7 @@ export const useWebRTC = (
         setParticipants(new Map());
         setLocalStream(null);
         setScreenStream(null);
-        
+
         audioTrackRef.current = null;
         videoTrackRef.current = null;
     }, []);

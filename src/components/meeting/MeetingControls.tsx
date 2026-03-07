@@ -64,15 +64,15 @@ export const MeetingControls: FC<MeetingControlsProps> = ({
         <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="fixed bottom-0 left-0 right-0 bg-black/20 backdrop-blur-xl border-t border-white/10"
+            className="fixed bottom-0 left-0 right-0 z-40 bg-black/20 backdrop-blur-xl border-t border-white/10"
         >
-            <div className="max-w-7xl mx-auto px-6 py-6">
-                <div className="flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+                <div className="flex items-center justify-between gap-2">
                     {/* Left section - Meeting info */}
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300">
+                    <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-lg hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300">
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50" />
-                            <span className="text-white text-sm font-medium">Recording</span>
+                            <span className="text-white text-xs sm:text-sm font-medium">Recording</span>
                         </div>
                     </div>
 
@@ -87,8 +87,8 @@ export const MeetingControls: FC<MeetingControlsProps> = ({
                                         onClick={onToggleAudio}
                                         size="lg"
                                         className={`rounded-full w-14 h-14 transition-all duration-300 ${audioEnabled
-                                                ? 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
-                                                : 'bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30'
+                                            ? 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
+                                            : 'bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30'
                                             }`}
                                     >
                                         {audioEnabled ? (
@@ -110,8 +110,8 @@ export const MeetingControls: FC<MeetingControlsProps> = ({
                                         onClick={onToggleVideo}
                                         size="lg"
                                         className={`rounded-full w-14 h-14 transition-all duration-300 ${videoEnabled
-                                                ? 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
-                                                : 'bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30'
+                                            ? 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
+                                            : 'bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30'
                                             }`}
                                     >
                                         {videoEnabled ? (
@@ -139,8 +139,8 @@ export const MeetingControls: FC<MeetingControlsProps> = ({
                                         onClick={onToggleScreenShare}
                                         size="lg"
                                         className={`rounded-full w-14 h-14 transition-all duration-300 ${isScreenSharing
-                                                ? 'bg-purple-500/20 backdrop-blur-md border border-purple-500/30 shadow-lg shadow-purple-500/20 hover:bg-purple-500/30 hover:shadow-xl hover:shadow-purple-500/30'
-                                                : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
+                                            ? 'bg-purple-500/20 backdrop-blur-md border border-purple-500/30 shadow-lg shadow-purple-500/20 hover:bg-purple-500/30 hover:shadow-xl hover:shadow-purple-500/30'
+                                            : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
                                             }`}
                                     >
                                         {isScreenSharing ? (
@@ -162,8 +162,8 @@ export const MeetingControls: FC<MeetingControlsProps> = ({
                                         onClick={onToggleHandRaise}
                                         size="lg"
                                         className={`rounded-full w-14 h-14 transition-all duration-300 ${handRaised
-                                                ? 'bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 shadow-lg shadow-yellow-500/20 hover:bg-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/30'
-                                                : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
+                                            ? 'bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 shadow-lg shadow-yellow-500/20 hover:bg-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/30'
+                                            : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
                                             }`}
                                     >
                                         <Hand className="w-6 h-6 text-white" />
