@@ -8,12 +8,12 @@ import {
 } from "lucide-react";
 
 const mockParticipants = [
-  { id: 1, name: "You", initials: "JD", muted: false, videoOn: true },
-  { id: 2, name: "Sarah Chen", initials: "SC", muted: true, videoOn: true },
-  { id: 3, name: "Mike Peters", initials: "MP", muted: false, videoOn: false },
-  { id: 4, name: "Lisa Wong", initials: "LW", muted: true, videoOn: true },
-  { id: 5, name: "Alex Rivera", initials: "AR", muted: false, videoOn: true },
-  { id: 6, name: "Emma Davis", initials: "ED", muted: true, videoOn: false },
+  { id: 1, name: "You", initials: "AM", muted: false, videoOn: true },
+  { id: 2, name: "Priya Sharma", initials: "PS", muted: true, videoOn: true },
+  { id: 3, name: "Ravi Kapoor", initials: "RK", muted: false, videoOn: false },
+  { id: 4, name: "Neha Gupta", initials: "NG", muted: true, videoOn: true },
+  { id: 5, name: "Aditya Rao", initials: "AR", muted: false, videoOn: true },
+  { id: 6, name: "Meera Joshi", initials: "MJ", muted: true, videoOn: false },
 ];
 
 const mockMessages = [
