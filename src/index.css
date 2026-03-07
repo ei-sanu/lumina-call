@@ -151,49 +151,93 @@
   }
 
   /* Animated grey background */
+  .hero-animated-bg {
+    background: radial-gradient(circle at 50% 30%, hsl(0 0% 8%) 0%, hsl(var(--background)) 65%);
+  }
+
+  .hero-silk-image {
+    @apply absolute inset-0;
+    opacity: 0.36;
+    filter: grayscale(100%) contrast(112%) brightness(70%);
+    will-change: transform;
+  }
+
   .noise-bg {
     @apply absolute inset-0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    background-size: 256px 256px;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    background-size: 220px 220px;
+    mix-blend-mode: screen;
   }
 
-  .gradient-orb {
+  .hero-silk-layer {
+    @apply absolute inset-0;
+    background-image:
+      radial-gradient(60% 40% at 70% 25%, hsl(0 0% 34% / 0.36), transparent 70%),
+      radial-gradient(45% 35% at 20% 75%, hsl(0 0% 30% / 0.3), transparent 72%),
+      linear-gradient(120deg, transparent 25%, hsl(0 0% 30% / 0.22) 45%, transparent 60%);
+    filter: blur(1px);
+    animation: hero-silk-shift 18s ease-in-out infinite alternate;
+  }
+
+  .hero-shimmer-band {
+    position: absolute;
+    top: -20%;
+    bottom: -20%;
+    width: 30%;
+    transform: skewX(-18deg);
+    background: linear-gradient(90deg, transparent 0%, hsl(0 0% 90% / 0.11) 50%, transparent 100%);
+    filter: blur(6px);
+    pointer-events: none;
+  }
+
+  .hero-vignette {
+    @apply absolute inset-0;
+    background: radial-gradient(circle at center, transparent 35%, hsl(var(--background) / 0.85) 100%);
+  }
+
+  .hero-blob {
     @apply absolute rounded-full;
-    filter: blur(120px);
-    opacity: 0.15;
+    filter: blur(95px);
+    opacity: 0.46;
+    will-change: transform;
   }
 
-  .gradient-orb-1 {
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, hsl(0 0% 30%) 0%, transparent 70%);
-    top: -200px;
-    right: -100px;
-    animation: float-orb 20s ease-in-out infinite;
+  .hero-blob-1 {
+    width: 560px;
+    height: 560px;
+    top: -160px;
+    right: -130px;
+    background: radial-gradient(circle, hsl(0 0% 44%) 0%, transparent 72%);
   }
 
-  .gradient-orb-2 {
+  .hero-blob-2 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, hsl(0 0% 25%) 0%, transparent 70%);
-    bottom: -150px;
-    left: -100px;
-    animation: float-orb 25s ease-in-out infinite reverse;
+    left: -140px;
+    bottom: -170px;
+    background: radial-gradient(circle, hsl(0 0% 38%) 0%, transparent 74%);
   }
 
-  .gradient-orb-3 {
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, hsl(0 0% 20%) 0%, transparent 70%);
-    top: 40%;
-    left: 40%;
-    animation: float-orb 18s ease-in-out infinite 5s;
+  @keyframes hero-silk-shift {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.95;
+    }
+    50% {
+      transform: translate3d(-1.5%, 1.5%, 0) scale(1.03);
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(1.8%, -1.2%, 0) scale(1.05);
+      opacity: 0.92;
+    }
   }
 
-  @keyframes float-orb {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(30px, -40px) scale(1.1); }
-    50% { transform: translate(-20px, 20px) scale(0.95); }
-    75% { transform: translate(40px, 30px) scale(1.05); }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-silk-layer,
+    .hero-shimmer-band,
+    .hero-silk-image {
+      animation: none;
+    }
   }
 }

@@ -1,19 +1,42 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import silkBg from "@/assets/silk-bg.jpg";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Animated grey background */}
-      <div className="absolute inset-0 -z-10 bg-background">
+    <section className="relative isolate min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      {/* Animated grey silk background */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-background hero-animated-bg">
+        <motion.img
+          src={silkBg}
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover hero-silk-image"
+          animate={{ scale: [1, 1.07, 1], x: [0, 12, -10, 0], y: [0, -8, 10, 0] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        />
         <div className="noise-bg" />
-        <div className="gradient-orb gradient-orb-1" />
-        <div className="gradient-orb gradient-orb-2" />
-        <div className="gradient-orb gradient-orb-3" />
+        <div className="hero-silk-layer" />
+        <motion.div
+          className="hero-shimmer-band"
+          animate={{ x: ["-35%", "130%"] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "linear" }}
+        />
+        <div className="hero-vignette" />
+
+        <motion.div
+          className="hero-blob hero-blob-1"
+          animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0], scale: [1, 1.08, 0.95, 1] }}
+          transition={{ duration: 20, ease: "easeInOut", repeat: Infinity }}
+        />
+        <motion.div
+          className="hero-blob hero-blob-2"
+          animate={{ x: [0, -35, 25, 0], y: [0, 25, -20, 0], scale: [1, 0.94, 1.05, 1] }}
+          transition={{ duration: 24, ease: "easeInOut", repeat: Infinity }}
+        />
       </div>
 
       <div className="container mx-auto px-4 text-center relative z-10 flex-1 flex flex-col items-center justify-center">
-        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -25,7 +48,6 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -36,18 +58,15 @@ const HeroSection = () => {
           <span className="chrome-text block" style={{ opacity: 0.5 }}>SPEAK FOR THEMSELVES</span>
         </motion.h1>
 
-        {/* Sub text */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed"
         >
-          Crystal-clear video conferencing built for teams who demand
-          excellence, so you can focus on what matters.
+          Crystal-clear video conferencing built for teams who demand excellence, so you can focus on what matters.
         </motion.p>
 
-        {/* CTA - White button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -65,3 +84,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
