@@ -1,7 +1,8 @@
+import { useUser } from "@clerk/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
 
 const navLinks = [
   { label: "Features", href: "/#features" },
@@ -10,10 +11,15 @@ const navLinks = [
   { label: "FAQ", href: "/#faq" },
 ];
 
-const Navbar = () => {
+interface NavbarProps {
+  onOpenAuth?: (mode: "signin" | "signup") => void;
+}
+
+const Navbar = ({ onOpenAuth }: NavbarProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const isLanding = location.pathname === "/";
+  const { isSignedIn } = useUser();
 
   return (
     <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl">
@@ -38,22 +44,30 @@ const Navbar = () => {
               className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300 relative group"
             >
               {link.label}
-              <span className="absolute -bottom-1 left-0 w-0 h-px bg-foreground transition-all duration-300 group-hover:w-full" />
             </a>
           ))}
-        </div>
-
-        <div className="hidden md:flex items-center gap-3">
-          <Link to="/login">
-            <button className="text-sm text-muted-foreground hover:text-foreground transition-colors px-4 py-2">
-              Sign in
-            </button>
-          </Link>
-          <Link to="/#contact">
-            <button className="bg-foreground text-background px-5 py-2 rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300">
-              Contact Us
-            </button>
-          </Link>
+          {isSignedIn ? (
+            <Link to="/dashboard">
+              <button className="bg-foreground text-background px-5 py-2 rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300">
+                Dashboard
+              </button>
+            </Link>
+          ) : (
+            <>
+              <button
+                onClick={() => onOpenAuth?.("signin")}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
+              >
+                Sign in
+              </button>
+              <button
+                onClick={() => onOpenAuth?.("signup")}
+                className="bg-foreground text-background px-5 py-2 rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300"
+              >
+                Get Started
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -75,25 +89,45 @@ const Navbar = () => {
             transition={{ duration: 0.2 }}
             className="md:hidden glass-card mt-2 rounded-2xl overflow-hidden"
           >
-            <div className="px-6 py-4 flex flex-col gap-3">
+            <div className="flex flex-col gap-1 p-4">
               {isLanding && navLinks.map((link) => (
                 <a
                   key={link.label}
                   href={link.href}
-                  className="text-sm text-muted-foreground py-2 hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
                 </a>
               ))}
-              <Link to="/login" onClick={() => setMobileOpen(false)}>
-                <button className="text-sm text-muted-foreground w-full text-left py-2">Sign in</button>
-              </Link>
-              <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                <button className="bg-foreground text-background px-5 py-2.5 rounded-full text-sm font-medium w-full">
-                  Get Started
-                </button>
-              </Link>
+              {isSignedIn ? (
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                  <button className="bg-foreground text-background px-5 py-2.5 rounded-full text-sm font-medium w-full">
+                    Dashboard
+                  </button>
+                </Link>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      onOpenAuth?.("signin");
+                      setMobileOpen(false);
+                    }}
+                    className="text-sm text-muted-foreground w-full text-left py-2"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={() => {
+                      onOpenAuth?.("signup");
+                      setMobileOpen(false);
+                    }}
+                    className="bg-foreground text-background px-5 py-2.5 rounded-full text-sm font-medium w-full"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
           </motion.div>
         )}

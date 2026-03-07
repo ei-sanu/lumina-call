@@ -1,8 +1,15 @@
+import silkBg from "@/assets/silk-bg.jpg";
+import { useUser } from "@clerk/react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import silkBg from "@/assets/silk-bg.jpg";
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  onOpenAuth?: (mode: "signin" | "signup") => void;
+}
+
+const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
+  const { isSignedIn } = useUser();
+
   return (
     <section className="relative isolate min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Animated grey silk background */}
@@ -72,11 +79,20 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.45 }}
         >
-          <Link to="/signup">
-            <button className="bg-foreground text-background px-8 py-3.5 rounded-full text-sm font-semibold hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-500 hover:scale-105">
+          {isSignedIn ? (
+            <Link to="/dashboard">
+              <button className="bg-foreground text-background px-8 py-3.5 rounded-full text-sm font-semibold hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-500 hover:scale-105">
+                Go to Dashboard
+              </button>
+            </Link>
+          ) : (
+            <button
+              onClick={() => onOpenAuth?.("signup")}
+              className="bg-foreground text-background px-8 py-3.5 rounded-full text-sm font-semibold hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all duration-500 hover:scale-105"
+            >
               Start Free Now
             </button>
-          </Link>
+          )}
         </motion.div>
       </div>
     </section>
@@ -84,4 +100,3 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
-

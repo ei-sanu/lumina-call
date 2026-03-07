@@ -69,12 +69,18 @@
     font-family: var(--font-body);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
   }
 }
 
 @layer components {
+
   /* Glass */
   .glass {
     @apply backdrop-blur-xl border;
@@ -89,22 +95,18 @@
   /* Chrome text */
   .chrome-text {
     @apply bg-clip-text text-transparent font-bold uppercase tracking-wider;
-    background-image: linear-gradient(
-      180deg,
-      hsl(var(--chrome-start)) 0%,
-      hsl(var(--chrome-mid)) 50%,
-      hsl(var(--chrome-end)) 100%
-    );
+    background-image: linear-gradient(180deg,
+        hsl(var(--chrome-start)) 0%,
+        hsl(var(--chrome-mid)) 50%,
+        hsl(var(--chrome-end)) 100%);
   }
 
   .chrome-text-hero {
     @apply bg-clip-text text-transparent font-bold uppercase;
-    background-image: linear-gradient(
-      180deg,
-      hsl(0 0% 95%) 0%,
-      hsl(0 0% 60%) 40%,
-      hsl(0 0% 35%) 100%
-    );
+    background-image: linear-gradient(180deg,
+        hsl(0 0% 95%) 0%,
+        hsl(0 0% 60%) 40%,
+        hsl(0 0% 35%) 100%);
   }
 
   /* Buttons */
@@ -114,6 +116,7 @@
     color: hsl(0 0% 4%);
     border-color: hsl(0 0% 100%);
   }
+
   .gradient-button:hover {
     background: transparent;
     color: hsl(0 0% 100%);
@@ -126,6 +129,7 @@
     color: hsl(0 0% 80%);
     border-color: hsl(0 0% 25%);
   }
+
   .ghost-button:hover {
     border-color: hsl(0 0% 50%);
     color: hsl(0 0% 100%);
@@ -135,6 +139,7 @@
   .hover-lift {
     @apply transition-all duration-300;
   }
+
   .hover-lift:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-glow);
@@ -142,12 +147,10 @@
 
   .divider-line {
     @apply h-px w-full;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(0 0% 25%) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        hsl(0 0% 25%) 50%,
+        transparent 100%);
   }
 
   /* Animated grey background */
@@ -223,10 +226,12 @@
       transform: translate3d(0, 0, 0) scale(1);
       opacity: 0.95;
     }
+
     50% {
       transform: translate3d(-1.5%, 1.5%, 0) scale(1.03);
       opacity: 1;
     }
+
     100% {
       transform: translate3d(1.8%, -1.2%, 0) scale(1.05);
       opacity: 0.92;
@@ -234,10 +239,125 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+
     .hero-silk-layer,
     .hero-shimmer-band,
     .hero-silk-image {
       animation: none;
     }
+  }
+
+  /* Clerk Modal Custom Styles */
+  .clerk-modal-container .cl-rootBox {
+    width: 100%;
+  }
+
+  .clerk-modal-container .cl-card {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .clerk-modal-container .cl-headerTitle {
+    font-family: var(--font-display);
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+  }
+
+  .clerk-modal-container .cl-headerSubtitle {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .clerk-modal-container .cl-socialButtonsBlockButton {
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-radius: 0.75rem !important;
+    transition: all 0.3s !important;
+  }
+
+  .clerk-modal-container .cl-socialButtonsBlockButton:hover {
+    background: hsl(var(--accent)) !important;
+    border-color: hsl(var(--foreground) / 0.3) !important;
+  }
+
+  .clerk-modal-container .cl-formButtonPrimary {
+    background: hsl(var(--foreground)) !important;
+    color: hsl(var(--background)) !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s !important;
+  }
+
+  .clerk-modal-container .cl-formButtonPrimary:hover {
+    background: hsl(var(--foreground) / 0.9) !important;
+  }
+
+  .clerk-modal-container .cl-formFieldLabel {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  .clerk-modal-container .cl-formFieldInput {
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .clerk-modal-container .cl-formFieldInput:focus {
+    border-color: hsl(var(--foreground) / 0.3) !important;
+    outline: none !important;
+  }
+
+  .clerk-modal-container .cl-footerActionLink {
+    color: hsl(var(--foreground));
+  }
+
+  .clerk-modal-container .cl-footerActionLink:hover {
+    color: hsl(var(--foreground) / 0.8);
+  }
+
+  .clerk-modal-container .cl-dividerLine {
+    background: hsl(var(--border));
+  }
+
+  .clerk-modal-container .cl-dividerText {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+  }
+
+  .clerk-modal-container .cl-formFieldInputShowPasswordButton {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .clerk-modal-container .cl-formFieldInputShowPasswordButton:hover {
+    color: hsl(var(--foreground));
+  }
+
+  .clerk-modal-container .cl-identityPreviewText {
+    color: hsl(var(--foreground));
+  }
+
+  /* Smooth scrollbar for modal overflow */
+  .clerk-modal-container::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .clerk-modal-container::-webkit-scrollbar-track {
+    background: hsl(var(--card));
+    border-radius: 4px;
+  }
+
+  .clerk-modal-container::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .clerk-modal-container::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
