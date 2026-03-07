@@ -68,7 +68,7 @@ const Terms = () => {
             TERMS & CONDITIONS
           </h1>
           <p className="text-muted-foreground text-sm mb-12">
-            Last updated: March 7, 2026 · Please read these terms carefully before using NexusCall.
+            Last updated: March 7, 2026 · Please read these terms carefully before using NovaArc.
           </p>
 
           <div className="space-y-10">
