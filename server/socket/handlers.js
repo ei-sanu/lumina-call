@@ -67,13 +67,13 @@ export const setupSocketHandlers = (io) => {
         });
 
         // WebRTC Signaling - Offer
-        socket.on('offer', ({ to, offer, from }) => {
-            io.to(to).emit('offer', { from, offer });
+        socket.on('offer', ({ to, offer, from, fromUserId }) => {
+            io.to(to).emit('offer', { from, offer, fromUserId });
         });
 
         // WebRTC Signaling - Answer
-        socket.on('answer', ({ to, answer, from }) => {
-            io.to(to).emit('answer', { from, answer });
+        socket.on('answer', ({ to, answer, from, fromUserId }) => {
+            io.to(to).emit('answer', { from, answer, fromUserId });
         });
 
         // WebRTC Signaling - ICE Candidate
@@ -126,15 +126,32 @@ export const setupSocketHandlers = (io) => {
         });
 
         // Chat messages
-        socket.on('chat-message', ({ roomId, message, userId, userName }) => {
+        socket.on('chat-message', ({ roomId, message, userId, userName, recipientId }) => {
             const chatMessage = {
                 id: `${Date.now()}-${userId}`,
                 userId,
                 userName,
                 message,
                 timestamp: Date.now(),
+                recipientId,
             };
-            io.to(roomId).emit('chat-message', chatMessage);
+
+            if (recipientId) {
+                // Direct message - send only to recipient and sender
+                const room = rooms.get(roomId);
+                if (room) {
+                    const recipient = room.participants.get(recipientId);
+                    if (recipient) {
+                        // Send to recipient
+                        io.to(recipient.socketId).emit('chat-message', chatMessage);
+                        // Send back to sender for confirmation
+                        socket.emit('chat-message', chatMessage);
+                    }
+                }
+            } else {
+                // Broadcast to everyone in the room
+                io.to(roomId).emit('chat-message', chatMessage);
+            }
         });
 
         // Host controls - Mute participant
@@ -171,6 +188,52 @@ export const setupSocketHandlers = (io) => {
             if (room && room.host === hostId) {
                 room.locked = locked;
                 socket.to(roomId).emit('room-lock-changed', { locked });
+                console.log(`Room ${roomId} ${locked ? 'locked' : 'unlocked'} by host`);
+            }
+        });
+
+        // Host controls - Mute all participants
+        socket.on('host-mute-all', ({ roomId, hostId }) => {
+            const room = rooms.get(roomId);
+            if (room && room.host === hostId) {
+                room.participants.forEach((participant, userId) => {
+                    if (userId !== hostId) {
+                        participant.audioEnabled = false;
+                        io.to(participant.socketId).emit('host-muted-you');
+                        console.log(`Muted ${participant.userName} by host`);
+                    }
+                });
+                socket.to(roomId).emit('all-participants-muted');
+            }
+        });
+
+        // Host controls - End meeting for all
+        socket.on('end-meeting-for-all', ({ roomId }) => {
+            const userData = userSocketMap.get(socket.id);
+            if (!userData) return;
+
+            const { userId } = userData;
+            const room = rooms.get(roomId);
+
+            // Only host can end meeting for all
+            if (room && room.host === userId) {
+                // Notify all participants except host
+                socket.to(roomId).emit('meeting-ended-by-host');
+
+                // Clean up all participants
+                Array.from(room.participants.values()).forEach(participant => {
+                    if (participant.socketId !== socket.id) {
+                        const participantSocket = io.sockets.sockets.get(participant.socketId);
+                        if (participantSocket) {
+                            participantSocket.leave(roomId);
+                        }
+                        userSocketMap.delete(participant.socketId);
+                    }
+                });
+
+                // Delete the room
+                rooms.delete(roomId);
+                console.log(`Room ${roomId} ended by host ${userId}`);
             }
         });
 
@@ -195,7 +258,11 @@ export const setupSocketHandlers = (io) => {
 
             if (room) {
                 room.participants.delete(userId);
-                socket.to(roomId).emit('user-left', { userId });
+                const participant = room.participants.get(userId);
+                socket.to(roomId).emit('user-left', {
+                    userId,
+                    socketId: socketId
+                });
 
                 // Clean up empty rooms
                 if (room.participants.size === 0) {

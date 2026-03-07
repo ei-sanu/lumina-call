@@ -1,109 +1,264 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Camera, Bell, Volume2, Save, Shield } from "lucide-react";
+import { ArrowLeft, Camera, Bell, Volume2, Shield, User, Mail, Lock } from "lucide-react";
+import { useUser } from "@clerk/react";
 
 const Settings = () => {
-  const [name, setName] = useState("Arjun Mehta");
-  const [email] = useState("arjun@novaarc.com");
+  const { user } = useUser();
+  const [notif1, setNotif1] = useState(true);
+  const [notif2, setNotif2] = useState(true);
+  const [notif3, setNotif3] = useState(false);
+  const [privacy1, setPrivacy1] = useState(true);
+  const [privacy2, setPrivacy2] = useState(false);
+  const [privacy3, setPrivacy3] = useState(true);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="h-16 border-b border-border/50 flex items-center px-6 sticky top-0 z-20 bg-background/80 backdrop-blur-lg">
-        <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Dashboard</span>
-        </Link>
-      </header>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background gradients matching home page */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+      </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="font-display text-3xl font-bold text-foreground mb-8">Settings</h1>
+      {/* Header */}
+      <div className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
 
-          {/* Profile */}
-          <div className="bg-card border border-border/50 p-6 rounded-2xl mb-4">
-            <h2 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <Camera className="w-4 h-4 text-muted-foreground" /> Profile
-            </h2>
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-8"
+        >
+          <h1 className="text-4xl font-bold chrome-text-hero">Settings</h1>
+
+          {/* Profile Section */}
+          <div className="glass-card p-6 space-y-4">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-full bg-accent flex items-center justify-center border border-border/50">
-                <span className="font-display text-xl font-semibold text-foreground">AM</span>
+              <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl font-bold text-purple-500">
+                {user?.firstName?.[0] || user?.username?.[0] || "U"}
               </div>
-              <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">Change avatar</button>
+              <div>
+                <h2 className="text-xl font-semibold">{user?.fullName || user?.username}</h2>
+                <p className="text-muted-foreground text-sm">{user?.primaryEmailAddress?.emailAddress}</p>
+              </div>
             </div>
-            <div className="space-y-4">
+
+            <div className="grid gap-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-2 uppercase tracking-wider">Display Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-foreground/20 transition-all" />
+                <label className="text-sm font-medium mb-2 block">Full Name</label>
+                <input
+                  type="text"
+                  disabled
+                  value={user?.fullName || ""}
+                  className="w-full px-4 py-2 rounded-lg bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Managed by Clerk authentication</p>
               </div>
+
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-2 uppercase tracking-wider">Email</label>
-                <input type="email" value={email} disabled className="w-full bg-muted/20 border border-border rounded-xl px-4 py-3 text-sm text-muted-foreground cursor-not-allowed" />
+                <label className="text-sm font-medium mb-2 block">Email</label>
+                <input
+                  type="email"
+                  disabled
+                  value={user?.primaryEmailAddress?.emailAddress || ""}
+                  className="w-full px-4 py-2 rounded-lg bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Managed by Clerk authentication</p>
               </div>
             </div>
           </div>
 
-          {/* Audio/Video */}
-          <div className="bg-card border border-border/50 p-6 rounded-2xl mb-4">
-            <h2 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <Volume2 className="w-4 h-4 text-muted-foreground" /> Audio & Video
-            </h2>
-            <div className="space-y-4">
-              {[
-                { label: "Camera", value: "MacBook Pro Camera" },
-                { label: "Microphone", value: "MacBook Pro Microphone" },
-                { label: "Speaker", value: "MacBook Pro Speakers" },
-              ].map((d) => (
-                <div key={d.label}>
-                  <label className="text-xs font-medium text-muted-foreground block mb-2 uppercase tracking-wider">{d.label}</label>
-                  <select className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-foreground/20 appearance-none">
-                    <option>{d.value}</option>
-                  </select>
-                </div>
-              ))}
+          {/* Audio/Video Settings */}
+          <div className="glass-card p-6 space-y-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Camera className="w-5 h-5 text-purple-500" />
+              Audio & Video
+            </h3>
+            
+            <div className="grid gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Camera</label>
+                <select className="w-full px-4 py-2 rounded-lg bg-background/50 border border-border/50">
+                  <option>Default Camera</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Microphone</label>
+                <select className="w-full px-4 py-2 rounded-lg bg-background/50 border border-border/50">
+                  <option>Default Microphone</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Speaker</label>
+                <select className="w-full px-4 py-2 rounded-lg bg-background/50 border border-border/50">
+                  <option>Default Speaker</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Notifications */}
-          <div className="bg-card border border-border/50 p-6 rounded-2xl mb-4">
-            <h2 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <Bell className="w-4 h-4 text-muted-foreground" /> Notifications
-            </h2>
-            <div className="space-y-1">
-              {["Meeting reminders", "Chat notifications", "Email summaries"].map((n) => (
-                <label key={n} className="flex items-center justify-between py-3 cursor-pointer border-b border-border/30 last:border-0">
-                  <span className="text-sm text-foreground">{n}</span>
-                  <div className="w-10 h-6 bg-accent rounded-full relative cursor-pointer border border-border/50">
-                    <div className="w-4 h-4 bg-foreground rounded-full absolute top-0.5 right-0.5 transition-all" />
-                  </div>
-                </label>
-              ))}
+          <div className="glass-card p-6 space-y-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Bell className="w-5 h-5 text-purple-500" />
+              Notifications
+            </h3>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Meeting Reminders</p>
+                  <p className="text-sm text-muted-foreground">Get notified before meetings start</p>
+                </div>
+                <button
+                  onClick={() => setNotif1(!notif1)}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    notif1 ? "bg-purple-500" : "bg-border"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notif1 ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Chat Notifications</p>
+                  <p className="text-sm text-muted-foreground">Receive notifications for new messages</p>
+                </div>
+                <button
+                  onClick={() => setNotif2(!notif2)}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    notif2 ? "bg-purple-500" : "bg-border"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notif2 ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email Summaries</p>
+                  <p className="text-sm text-muted-foreground">Weekly summary of your meetings</p>
+                </div>
+                <button
+                  onClick={() => setNotif3(!notif3)}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    notif3 ? "bg-purple-500" : "bg-border"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      notif3 ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Privacy */}
-          <div className="bg-card border border-border/50 p-6 rounded-2xl mb-6">
-            <h2 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <Shield className="w-4 h-4 text-muted-foreground" /> Privacy
-            </h2>
-            <div className="space-y-1">
-              {["End-to-end encryption", "Two-factor authentication", "Login notifications"].map((n) => (
-                <label key={n} className="flex items-center justify-between py-3 cursor-pointer border-b border-border/30 last:border-0">
-                  <span className="text-sm text-foreground">{n}</span>
-                  <div className="w-10 h-6 bg-accent rounded-full relative cursor-pointer border border-border/50">
-                    <div className="w-4 h-4 bg-foreground rounded-full absolute top-0.5 right-0.5 transition-all" />
-                  </div>
-                </label>
-              ))}
+          <div className="glass-card p-6 space-y-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-500" />
+              Privacy & Security
+            </h3>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">End-to-End Encryption</p>
+                  <p className="text-sm text-muted-foreground">Encrypt all your meetings</p>
+                </div>
+                <button
+                  onClick={() => setPrivacy1(!privacy1)}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    privacy1 ? "bg-purple-500" : "bg-border"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      privacy1 ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Two-Factor Authentication</p>
+                  <p className="text-sm text-muted-foreground">Add extra layer of security</p>
+                </div>
+                <button
+                  onClick={() => setPrivacy2(!privacy2)}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    privacy2 ? "bg-purple-500" : "bg-border"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      privacy2 ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Login Notifications</p>
+                  <p className="text-sm text-muted-foreground">Get notified of new logins</p>
+                </div>
+                <button
+                  onClick={() => setPrivacy3(!privacy3)}
+                  className={`w-11 h-6 rounded-full transition-colors relative ${
+                    privacy3 ? "bg-purple-500" : "bg-border"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      privacy3 ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
-            <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground mt-4 inline-block transition-colors">
-              View Terms & Conditions →
-            </Link>
+
+            {/* Terms Link */}
+            <div className="pt-4 border-t border-border/50">
+              <Link
+                to="/terms"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 group"
+              >
+                <Lock className="w-3 h-3 group-hover:text-purple-500 transition-colors" />
+                View Terms & Privacy Policy →
+              </Link>
+            </div>
           </div>
 
-          <button className="gradient-button px-6 py-3 rounded-xl text-sm flex items-center gap-2">
-            <Save className="w-4 h-4" /> Save Changes
-          </button>
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <button className="gradient-button px-8 py-3 rounded-xl text-sm font-medium">
+              Save Changes
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>

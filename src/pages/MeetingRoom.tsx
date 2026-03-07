@@ -1,4 +1,5 @@
 import { ChatPanel } from "@/components/meeting/ChatPanel";
+import { HostControlsPanel } from "@/components/meeting/HostControlsPanel";
 import { MeetingControls } from "@/components/meeting/MeetingControls";
 import { ParticipantsList } from "@/components/meeting/ParticipantsList";
 import { VideoParticipant } from "@/components/meeting/VideoParticipant";
@@ -15,10 +16,10 @@ import { Button } from "@/components/ui/button";
 import { useSocket } from "@/hooks/use-socket";
 import { useToast } from "@/hooks/use-toast";
 import { useWebRTC } from "@/hooks/use-webrtc";
-import { getMeeting } from "@/lib/supabase";
+import { addMeetingParticipant, endMeeting, getMeeting, updateParticipantLeftTime } from "@/lib/supabase";
 import { ChatMessage, Participant } from "@/types/meeting";
 import { useUser } from "@clerk/react";
-import { AlertCircle, Check, Copy, Loader2 } from "lucide-react";
+import { AlertCircle, Check, Copy, Grid, Loader2, Monitor, Sidebar as SidebarIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -40,6 +41,9 @@ const MeetingRoom = () => {
   const [showLeftDialog, setShowLeftDialog] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [layout, setLayout] = useState<'grid' | 'spotlight' | 'sidebar'>('grid');
+  const [hostControlsOpen, setHostControlsOpen] = useState(false);
+  const [roomLocked, setRoomLocked] = useState(false);
 
   const userId = user?.id || "guest";
   const userName = user?.fullName || user?.username || "Guest User";
@@ -104,6 +108,9 @@ const MeetingRoom = () => {
           isHost,
         });
 
+        // Track participant in database
+        await addMeetingParticipant(meetingId, userId, userName);
+
         console.log("Joined meeting room:", meetingId);
       } catch (err) {
         console.error("Error initializing:", err);
@@ -118,8 +125,9 @@ const MeetingRoom = () => {
     init();
 
     return () => {
-      if (socket) {
+      if (socket && meetingId) {
         socket.emit("leave-room");
+        updateParticipantLeftTime(meetingId, userId);
       }
       cleanup();
     };
@@ -163,12 +171,25 @@ const MeetingRoom = () => {
       navigate("/dashboard");
     });
 
+    socket.on("meeting-ended-by-host", () => {
+      toast({
+        title: "Meeting Ended",
+        description: "The host has ended the meeting for all participants",
+        variant: "destructive",
+      });
+      if (meetingId) {
+        updateParticipantLeftTime(meetingId, userId);
+      }
+      navigate("/dashboard");
+    });
+
     return () => {
       socket.off("chat-message");
       socket.off("hand-raised");
       socket.off("host-muted-you");
       socket.off("removed-by-host");
       socket.off("room-locked");
+      socket.off("meeting-ended-by-host");
     };
   }, [socket]);
 
@@ -193,13 +214,14 @@ const MeetingRoom = () => {
     return arr;
   }, [participants, userId, userName, audioEnabled, videoEnabled, isScreenSharing, handRaised, localStream, isHost]);
 
-  const handleSendMessage = (message: string) => {
+  const handleSendMessage = (message: string, recipientId?: string) => {
     if (socket && meetingId) {
       socket.emit("chat-message", {
         roomId: meetingId,
         message,
         userId,
         userName,
+        recipientId,
       });
     }
   };
@@ -244,11 +266,65 @@ const MeetingRoom = () => {
     }
   };
 
-  const handleLeaveMeeting = () => {
+  const handleToggleRoomLock = () => {
+    if (socket && meetingId && isHost) {
+      const newLockState = !roomLocked;
+      setRoomLocked(newLockState);
+      socket.emit("host-lock-room", {
+        roomId: meetingId,
+        locked: newLockState,
+      });
+      toast({
+        title: newLockState ? "Room Locked" : "Room Unlocked",
+        description: newLockState
+          ? "New participants cannot join"
+          : "Room is now open to new participants",
+      });
+    }
+  };
+
+  const handleMuteAll = () => {
+    if (socket && meetingId && isHost) {
+      socket.emit("host-mute-all", {
+        roomId: meetingId,
+        hostId: userId,
+      });
+      toast({
+        title: "All Participants Muted",
+        description: "All participants have been muted",
+      });
+    }
+  };
+
+  const handleLeaveMeeting = async () => {
+    if (meetingId) {
+      await updateParticipantLeftTime(meetingId, userId);
+    }
     setShowLeftDialog(true);
     setTimeout(() => {
       navigate("/dashboard");
     }, 2000);
+  };
+
+  const handleEndMeetingForAll = async () => {
+    if (!isHost || !meetingId) return;
+
+    try {
+      await endMeeting(meetingId, userId);
+      socket?.emit("end-meeting-for-all", { roomId: meetingId });
+      toast({
+        title: "Meeting Ended",
+        description: "The meeting has been ended for all participants",
+      });
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Error ending meeting:", err);
+      toast({
+        title: "Error",
+        description: "Failed to end meeting",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyInviteLink = () => {
@@ -307,55 +383,161 @@ const MeetingRoom = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
+      {/* Background Gradient Circles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+      </div>
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/60 to-transparent backdrop-blur-sm">
+      <div className="absolute top-0 left-0 right-0 z-30 backdrop-blur-md bg-white/10 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-white text-xl font-semibold">{meetingTitle}</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              {meetingTitle}
+            </h1>
             <div className="flex items-center gap-3 mt-1">
               <button
                 onClick={copyInviteCode}
-                className="text-sm text-gray-300 hover:text-white flex items-center gap-1 transition-colors"
+                className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-sm text-white hover:bg-white/20 flex items-center gap-2 transition-all"
               >
-                Code: {inviteCode}
-                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                <span className="font-mono">{inviteCode}</span>
+                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
               </button>
-              <span className="text-gray-500">•</span>
               <button
                 onClick={copyInviteLink}
-                className="text-sm text-gray-300 hover:text-white transition-colors"
+                className="text-sm text-gray-300 hover:text-white transition-colors underline decoration-dotted"
               >
                 Share invite link
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-full">
+          <div className="flex items-center gap-3">
+            {/* Layout Toggle */}
+            <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-1">
+              <button
+                onClick={() => setLayout('grid')}
+                className={`p-2 rounded transition-all ${layout === 'grid' ? 'bg-purple-500 text-white' : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
+                title="Grid View"
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setLayout('spotlight')}
+                className={`p-2 rounded transition-all ${layout === 'spotlight' ? 'bg-purple-500 text-white' : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
+                title="Spotlight View"
+              >
+                <Monitor className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setLayout('sidebar')}
+                className={`p-2 rounded transition-all ${layout === 'sidebar' ? 'bg-purple-500 text-white' : 'text-gray-300 hover:text-white hover:bg-white/10'
+                  }`}
+                title="Sidebar View"
+              >
+                <SidebarIcon className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 bg-green-500/20 backdrop-blur-sm border border-green-500/30 px-3 py-1.5 rounded-full">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-green-400 text-sm font-medium">
                 {participantArray.length} in call
               </span>
             </div>
+            {isHost && (
+              <Button
+                onClick={handleEndMeetingForAll}
+                variant="destructive"
+                size="sm"
+                className="bg-red-500/80 hover:bg-red-600 backdrop-blur-sm"
+              >
+                End for All
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Video Grid */}
+      {/* Video Grid - Different Layouts */}
       <div className="h-screen pt-20 pb-32 px-6">
-        <div
-          className={`h-full grid gap-4 ${getGridCols(
-            participantArray.length
-          )} auto-rows-fr max-w-7xl mx-auto`}
-        >
-          {participantArray.map((participant) => (
-            <VideoParticipant
-              key={participant.userId}
-              participant={participant}
-              isLocal={participant.userId === userId}
-              stream={participant.stream}
-            />
-          ))}
-        </div>
+        {layout === 'grid' && (
+          <div
+            className={`h-full grid gap-4 ${getGridCols(
+              participantArray.length
+            )} auto-rows-fr max-w-7xl mx-auto`}
+          >
+            {participantArray.map((participant) => (
+              <VideoParticipant
+                key={participant.userId}
+                participant={participant}
+                isLocal={participant.userId === userId}
+                stream={participant.stream}
+              />
+            ))}
+          </div>
+        )}
+
+        {layout === 'spotlight' && (
+          <div className="h-full flex flex-col gap-4 max-w-7xl mx-auto">
+            {/* Main spotlight participant */}
+            <div className="flex-1">
+              {participantArray[0] && (
+                <VideoParticipant
+                  key={participantArray[0].userId}
+                  participant={participantArray[0]}
+                  isLocal={participantArray[0].userId === userId}
+                  stream={participantArray[0].stream}
+                />
+              )}
+            </div>
+            {/* Thumbnail row */}
+            {participantArray.length > 1 && (
+              <div className="h-32 flex gap-2 overflow-x-auto pb-2">
+                {participantArray.slice(1).map((participant) => (
+                  <div key={participant.userId} className="w-40 flex-shrink-0">
+                    <VideoParticipant
+                      participant={participant}
+                      isLocal={participant.userId === userId}
+                      stream={participant.stream}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {layout === 'sidebar' && (
+          <div className="h-full flex gap-4 max-w-7xl mx-auto">
+            {/* Main view */}
+            <div className="flex-1">
+              {participantArray[0] && (
+                <VideoParticipant
+                  key={participantArray[0].userId}
+                  participant={participantArray[0]}
+                  isLocal={participantArray[0].userId === userId}
+                  stream={participantArray[0].stream}
+                />
+              )}
+            </div>
+            {/* Sidebar */}
+            {participantArray.length > 1 && (
+              <div className="w-64 flex flex-col gap-2 overflow-y-auto">
+                {participantArray.slice(1).map((participant) => (
+                  <div key={participant.userId} className="aspect-video">
+                    <VideoParticipant
+                      participant={participant}
+                      isLocal={participant.userId === userId}
+                      stream={participant.stream}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Controls */}
@@ -378,6 +560,8 @@ const MeetingRoom = () => {
         }}
         onLeaveMeeting={handleLeaveMeeting}
         participantCount={participantArray.length}
+        isHost={isHost}
+        onOpenHostControls={() => setHostControlsOpen(true)}
       />
 
       {/* Chat Panel */}
@@ -387,6 +571,7 @@ const MeetingRoom = () => {
         messages={chatMessages}
         onSendMessage={handleSendMessage}
         currentUserId={userId}
+        participants={participantArray}
       />
 
       {/* Participants List */}
@@ -398,6 +583,19 @@ const MeetingRoom = () => {
         isHost={isHost}
         onMuteParticipant={handleMuteParticipant}
         onRemoveParticipant={handleRemoveParticipant}
+      />
+
+      {/* Host Controls Panel */}
+      <HostControlsPanel
+        isOpen={hostControlsOpen}
+        onClose={() => setHostControlsOpen(false)}
+        participants={participantArray}
+        roomLocked={roomLocked}
+        onToggleRoomLock={handleToggleRoomLock}
+        onMuteAll={handleMuteAll}
+        onMuteParticipant={handleMuteParticipant}
+        onRemoveParticipant={handleRemoveParticipant}
+        currentUserId={userId}
       />
 
       {/* Left Meeting Dialog */}

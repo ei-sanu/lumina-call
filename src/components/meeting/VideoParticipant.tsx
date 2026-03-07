@@ -35,7 +35,7 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="relative bg-gray-900 rounded-lg overflow-hidden shadow-lg aspect-video group"
+            className="relative bg-black/20 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden shadow-lg aspect-video group transition-all duration-300 hover:scale-[1.02] hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/20"
         >
             {/* Video element */}
             {participant.videoEnabled && stream ? (
@@ -62,12 +62,16 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
             {/* Bottom info bar */}
             <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <span className="text-white text-sm font-medium drop-shadow-lg">
+                    <span className="bg-black/60 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-md text-white text-sm font-medium shadow-lg">
                         {participant.userName}
-                        {isLocal && ' (You)'}
                     </span>
+                    {isLocal && (
+                        <span className="bg-purple-500/80 backdrop-blur-sm border border-purple-400/30 text-xs px-2 py-0.5 rounded-full text-white font-semibold shadow-lg">
+                            You
+                        </span>
+                    )}
                     {participant.isHost && (
-                        <span className="bg-yellow-500 text-xs px-2 py-0.5 rounded-full text-black font-semibold">
+                        <span className="bg-yellow-500/80 backdrop-blur-sm border border-yellow-400/30 text-xs px-2 py-0.5 rounded-full text-black font-semibold shadow-lg">
                             Host
                         </span>
                     )}
@@ -75,7 +79,7 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
 
                 <div className="flex items-center gap-1">
                     {!participant.audioEnabled && (
-                        <div className="bg-red-500 rounded-full p-1.5">
+                        <div className="bg-red-500/80 backdrop-blur-sm border border-red-400/30 rounded-full p-1.5 shadow-lg">
                             <MicOff className="w-3 h-3 text-white" />
                         </div>
                     )}
@@ -83,7 +87,7 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="bg-yellow-500 rounded-full p-1.5"
+                            className="bg-yellow-500/80 backdrop-blur-sm border border-yellow-400/30 rounded-full p-1.5 shadow-lg"
                         >
                             <Hand className="w-3 h-3 text-white" />
                         </motion.div>

@@ -30,6 +30,7 @@ export interface ChatMessage {
     userName: string;
     message: string;
     timestamp: number;
+    recipientId?: string;
 }
 
 export interface VoiceChannel {

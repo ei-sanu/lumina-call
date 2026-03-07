@@ -154,26 +154,106 @@ router.post('/:meetingId/end', async (req, res) => {
     }
 });
 
-// Get user's meetings
+// Get user's meetings (both hosted and joined)
 router.get('/user/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const { data, error } = await supabase
+        // Get meetings where user is host
+        const { data: hostedMeetings, error: hostError } = await supabase
             .from('meetings')
             .select('*')
             .eq('host_id', userId)
             .order('created_at', { ascending: false })
             .limit(20);
 
-        if (error) throw error;
+        if (hostError) throw hostError;
 
-        res.json({ success: true, meetings: data || [] });
+        // Get meetings where user participated
+        const { data: participatedMeetings, error: participantError } = await supabase
+            .from('meeting_participants')
+            .select('meeting_id, meetings(*)')
+            .eq('user_id', userId)
+            .order('joined_at', { ascending: false })
+            .limit(20);
+
+        if (participantError) throw participantError;
+
+        // Combine and deduplicate
+        const meetingIds = new Set();
+        const allMeetings = [
+            ...(hostedMeetings || []),
+            ...(participatedMeetings || []).map(p => p.meetings).filter(Boolean)
+        ].filter(meeting => {
+            if (meetingIds.has(meeting.id)) return false;
+            meetingIds.add(meeting.id);
+            return true;
+        });
+
+        // Sort by created_at
+        allMeetings.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        res.json({ success: true, meetings: allMeetings.slice(0, 20) });
     } catch (error) {
         console.error('Error fetching user meetings:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch meetings'
+        });
+    }
+});
+
+// Add participant to meeting
+router.post('/:meetingId/participants', async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+        const { userId, userName } = req.body;
+
+        const { data, error } = await supabase
+            .from('meeting_participants')
+            .insert([
+                {
+                    meeting_id: meetingId,
+                    user_id: userId,
+                    user_name: userName,
+                    joined_at: new Date().toISOString(),
+                },
+            ])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ success: true, participant: data });
+    } catch (error) {
+        console.error('Error adding participant:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to add participant'
+        });
+    }
+});
+
+// Update participant left time
+router.post('/:meetingId/participants/:userId/leave', async (req, res) => {
+    try {
+        const { meetingId, userId } = req.params;
+
+        const { error } = await supabase
+            .from('meeting_participants')
+            .update({ left_at: new Date().toISOString() })
+            .eq('meeting_id', meetingId)
+            .eq('user_id', userId)
+            .is('left_at', null);
+
+        if (error) throw error;
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating participant:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update participant'
         });
     }
 });

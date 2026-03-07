@@ -42,3 +42,20 @@ export const getUserMeetings = async (userId: string) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/user/${userId}`);
     return response.json();
 };
+
+export const addMeetingParticipant = async (meetingId: string, userId: string, userName: string) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/${meetingId}/participants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, userName }),
+    });
+    return response.json();
+};
+
+export const updateParticipantLeftTime = async (meetingId: string, userId: string) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/${meetingId}/participants/${userId}/leave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+};
