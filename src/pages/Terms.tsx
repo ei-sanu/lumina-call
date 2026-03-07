@@ -37,7 +37,7 @@ const sections = [
   },
   {
     title: "9. Limitation of Liability",
-    content: "In no event shall NexusCall be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising out of or in connection with your use of the Service. Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim."
+    content: "In no event shall NovaArc be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising out of or in connection with your use of the Service. Our total liability shall not exceed the amount paid by you in the twelve months preceding the claim."
   },
   {
     title: "10. Changes to Terms",
