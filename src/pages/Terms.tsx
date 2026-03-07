@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "6. Intellectual Property",
-    content: "The Service and its original content, features, and functionality are owned by NexusCall and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of our Service without express written permission."
+    content: "The Service and its original content, features, and functionality are owned by NovaArc and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of our Service without express written permission."
   },
   {
     title: "7. Payment Terms",
