@@ -17,9 +17,9 @@ const mockParticipants = [
 ];
 
 const mockMessages = [
-  { id: 1, sender: "Sarah Chen", text: "Can everyone see my screen?", time: "2:05 PM" },
-  { id: 2, sender: "Mike Peters", text: "Yes, looks great!", time: "2:05 PM" },
-  { id: 3, sender: "Lisa Wong", text: "Could you zoom in on the chart?", time: "2:06 PM" },
+  { id: 1, sender: "Priya Sharma", text: "Can everyone see the updated mockups?", time: "2:05 PM" },
+  { id: 2, sender: "Ravi Kapoor", text: "Yep, looking sharp — nice work on the nav.", time: "2:05 PM" },
+  { id: 3, sender: "Neha Gupta", text: "Could you zoom in on the metrics section?", time: "2:06 PM" },
 ];
 
 const MeetingRoom = () => {
