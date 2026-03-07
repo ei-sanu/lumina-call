@@ -1,253 +1,421 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { ChatPanel } from "@/components/meeting/ChatPanel";
+import { MeetingControls } from "@/components/meeting/MeetingControls";
+import { ParticipantsList } from "@/components/meeting/ParticipantsList";
+import { VideoParticipant } from "@/components/meeting/VideoParticipant";
 import {
-  Mic, MicOff, VideoIcon, VideoOff, Monitor,
-  MessageSquare, Users, Phone, MoreVertical,
-  Send, X, Info, Hand, Smile
-} from "lucide-react";
-
-const mockParticipants = [
-  { id: 1, name: "You", initials: "AM", muted: false, videoOn: true },
-  { id: 2, name: "Priya Sharma", initials: "PS", muted: true, videoOn: true },
-  { id: 3, name: "Ravi Kapoor", initials: "RK", muted: false, videoOn: false },
-  { id: 4, name: "Neha Gupta", initials: "NG", muted: true, videoOn: true },
-  { id: 5, name: "Aditya Rao", initials: "AR", muted: false, videoOn: true },
-  { id: 6, name: "Meera Joshi", initials: "MJ", muted: true, videoOn: false },
-];
-
-const mockMessages = [
-  { id: 1, sender: "Priya Sharma", text: "Can everyone see the updated mockups?", time: "2:05 PM" },
-  { id: 2, sender: "Ravi Kapoor", text: "Yep, looking sharp — nice work on the nav.", time: "2:05 PM" },
-  { id: 3, sender: "Neha Gupta", text: "Could you zoom in on the metrics section?", time: "2:06 PM" },
-];
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { useSocket } from "@/hooks/use-socket";
+import { useToast } from "@/hooks/use-toast";
+import { useWebRTC } from "@/hooks/use-webrtc";
+import { getMeeting } from "@/lib/supabase";
+import { ChatMessage, Participant } from "@/types/meeting";
+import { useUser } from "@clerk/react";
+import { AlertCircle, Check, Copy, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
-  const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
+  const { id: meetingId } = useParams<{ id: string }>();
+  const { user } = useUser();
+  const { toast } = useToast();
+  const { socket, isConnected } = useSocket();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [meetingTitle, setMeetingTitle] = useState("");
+  const [isHost, setIsHost] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [participantsOpen, setParticipantsOpen] = useState(false);
-  const [infoOpen, setInfoOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
-  const [messages, setMessages] = useState(mockMessages);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [handRaised, setHandRaised] = useState(false);
+  const [showLeftDialog, setShowLeftDialog] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const sendMessage = () => {
-    if (!chatMessage.trim()) return;
-    setMessages([...messages, {
-      id: messages.length + 1,
-      sender: "You",
-      text: chatMessage,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
-    setChatMessage("");
+  const userId = user?.id || "guest";
+  const userName = user?.fullName || user?.username || "Guest User";
+
+  const {
+    localStream,
+    screenStream,
+    participants,
+    audioEnabled,
+    videoEnabled,
+    isScreenSharing,
+    initializeMedia,
+    toggleAudio,
+    toggleVideo,
+    startScreenShare,
+    stopScreenShare,
+    cleanup,
+  } = useWebRTC(socket, meetingId || "", userId, userName);
+
+  // Load meeting details
+  useEffect(() => {
+    const loadMeeting = async () => {
+      if (!meetingId) {
+        setError("Invalid meeting ID");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await getMeeting(meetingId);
+        if (response.success && response.meeting) {
+          setMeetingTitle(response.meeting.title);
+          setIsHost(response.meeting.host_id === userId);
+          setInviteCode(response.meeting.invite_code);
+        } else {
+          setError("Meeting not found");
+        }
+      } catch (err) {
+        console.error("Error loading meeting:", err);
+        setError("Failed to load meeting");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMeeting();
+  }, [meetingId, userId]);
+
+  // Initialize media and join room
+  useEffect(() => {
+    const init = async () => {
+      if (!socket || !isConnected || !meetingId || isLoading) return;
+
+      try {
+        await initializeMedia();
+
+        // Join the room via socket
+        socket.emit("join-room", {
+          roomId: meetingId,
+          userId,
+          userName,
+          isHost,
+        });
+
+        console.log("Joined meeting room:", meetingId);
+      } catch (err) {
+        console.error("Error initializing:", err);
+        toast({
+          title: "Media Access Error",
+          description: "Failed to access camera/microphone. Please check permissions.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    init();
+
+    return () => {
+      if (socket) {
+        socket.emit("leave-room");
+      }
+      cleanup();
+    };
+  }, [socket, isConnected, meetingId, isLoading]);
+
+  // Socket event listeners for chat and other features
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("chat-message", (message: ChatMessage) => {
+      setChatMessages((prev) => [...prev, message]);
+    });
+
+    socket.on("hand-raised", (data: { userId: string; raised: boolean }) => {
+      // Handle other participants raising hand (could show notification)
+      console.log("Hand raised:", data);
+    });
+
+    socket.on("host-muted-you", () => {
+      toast({
+        title: "You were muted",
+        description: "The host has muted your microphone",
+      });
+    });
+
+    socket.on("removed-by-host", () => {
+      toast({
+        title: "Removed from meeting",
+        description: "You have been removed by the host",
+        variant: "destructive",
+      });
+      handleLeaveMeeting();
+    });
+
+    socket.on("room-locked", () => {
+      toast({
+        title: "Room Locked",
+        description: "This meeting room is currently locked",
+        variant: "destructive",
+      });
+      navigate("/dashboard");
+    });
+
+    return () => {
+      socket.off("chat-message");
+      socket.off("hand-raised");
+      socket.off("host-muted-you");
+      socket.off("removed-by-host");
+      socket.off("room-locked");
+    };
+  }, [socket]);
+
+  // Convert participants Map to array for display
+  const participantArray = useMemo(() => {
+    const arr: Participant[] = Array.from(participants.values());
+    // Add current user if not in list
+    const hasCurrentUser = arr.some((p) => p.userId === userId);
+    if (!hasCurrentUser && localStream) {
+      arr.unshift({
+        userId,
+        userName,
+        socketId: socket?.id || "",
+        audioEnabled,
+        videoEnabled,
+        screenSharing: isScreenSharing,
+        handRaised,
+        isHost,
+        stream: localStream,
+      });
+    }
+    return arr;
+  }, [participants, userId, userName, audioEnabled, videoEnabled, isScreenSharing, handRaised, localStream, isHost]);
+
+  const handleSendMessage = (message: string) => {
+    if (socket && meetingId) {
+      socket.emit("chat-message", {
+        roomId: meetingId,
+        message,
+        userId,
+        userName,
+      });
+    }
   };
 
-  const closePanels = () => { setChatOpen(false); setParticipantsOpen(false); setInfoOpen(false); };
-
-  const togglePanel = (panel: "chat" | "participants" | "info") => {
-    setChatOpen(panel === "chat" ? !chatOpen : false);
-    setParticipantsOpen(panel === "participants" ? !participantsOpen : false);
-    setInfoOpen(panel === "info" ? !infoOpen : false);
+  const handleToggleHandRaise = () => {
+    const newState = !handRaised;
+    setHandRaised(newState);
+    if (socket && meetingId) {
+      socket.emit("raise-hand", {
+        roomId: meetingId,
+        userId,
+        raised: newState,
+      });
+    }
   };
 
-  const anyPanelOpen = chatOpen || participantsOpen || infoOpen;
+  const handleToggleScreenShare = () => {
+    if (isScreenSharing) {
+      stopScreenShare();
+    } else {
+      startScreenShare();
+    }
+  };
+
+  const handleMuteParticipant = (targetUserId: string) => {
+    if (socket && meetingId && isHost) {
+      socket.emit("host-mute-participant", {
+        roomId: meetingId,
+        targetUserId,
+        hostId: userId,
+      });
+    }
+  };
+
+  const handleRemoveParticipant = (targetUserId: string) => {
+    if (socket && meetingId && isHost) {
+      socket.emit("host-remove-participant", {
+        roomId: meetingId,
+        targetUserId,
+        hostId: userId,
+      });
+    }
+  };
+
+  const handleLeaveMeeting = () => {
+    setShowLeftDialog(true);
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 2000);
+  };
+
+  const copyInviteLink = () => {
+    const link = `${window.location.origin}/meeting/${meetingId}`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({
+      title: "Link copied!",
+      description: "Meeting invite link copied to clipboard",
+    });
+  };
+
+  const copyInviteCode = () => {
+    navigator.clipboard.writeText(inviteCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({
+      title: "Code copied!",
+      description: "Meeting invite code copied to clipboard",
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg">Loading meeting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-white text-2xl font-bold mb-2">Unable to Join Meeting</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <Button onClick={() => navigate("/dashboard")}>Return to Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate grid layout based on number of participants
+  const getGridCols = (count: number) => {
+    if (count === 1) return "grid-cols-1";
+    if (count === 2) return "grid-cols-2";
+    if (count <= 4) return "grid-cols-2";
+    if (count <= 9) return "grid-cols-3";
+    return "grid-cols-4";
+  };
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
-      {/* Top bar */}
-      <div className="h-12 border-b border-border/50 flex items-center justify-between px-4 flex-shrink-0 bg-card">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm font-medium text-foreground">Design Review</span>
-          <span className="text-xs text-muted-foreground font-mono">45:32</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => togglePanel("info")}
-            className={`p-2 rounded-lg transition-colors duration-200 ${infoOpen ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            <Info className="w-4 h-4" />
-          </button>
-          <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground">
-            <MoreVertical className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* Video grid */}
-        <div className="flex-1 p-2">
-          <div className={`grid gap-2 h-full ${
-            mockParticipants.length <= 2 ? "grid-cols-1 md:grid-cols-2" :
-            mockParticipants.length <= 4 ? "grid-cols-2" :
-            "grid-cols-2 lg:grid-cols-3"
-          }`}>
-            {mockParticipants.map((p) => (
-              <motion.div
-                key={p.id}
-                layout
-                className="bg-card rounded-xl border border-border/30 relative flex items-center justify-center min-h-[100px] overflow-hidden group"
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/60 to-transparent backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-white text-xl font-semibold">{meetingTitle}</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <button
+                onClick={copyInviteCode}
+                className="text-sm text-gray-300 hover:text-white flex items-center gap-1 transition-colors"
               >
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-accent flex items-center justify-center border border-border/50">
-                  <span className="text-lg md:text-xl font-display font-semibold text-foreground">{p.initials}</span>
-                </div>
-                {/* Name tag */}
-                <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur-sm px-2.5 py-1 rounded-md flex items-center gap-1.5 border border-border/30">
-                  {p.muted && <MicOff className="w-3 h-3 text-destructive" />}
-                  <span className="text-xs text-foreground">{p.name}</span>
-                </div>
-              </motion.div>
-            ))}
+                Code: {inviteCode}
+                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+              </button>
+              <span className="text-gray-500">•</span>
+              <button
+                onClick={copyInviteLink}
+                className="text-sm text-gray-300 hover:text-white transition-colors"
+              >
+                Share invite link
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-full">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-green-400 text-sm font-medium">
+                {participantArray.length} in call
+              </span>
+            </div>
           </div>
         </div>
-
-        {/* Side panels */}
-        <AnimatePresence>
-          {anyPanelOpen && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="border-l border-border/50 bg-card flex flex-col overflow-hidden flex-shrink-0"
-            >
-              <div className="h-12 flex items-center justify-between px-4 border-b border-border/50 flex-shrink-0">
-                <span className="font-display font-semibold text-sm text-foreground">
-                  {chatOpen ? "Chat" : participantsOpen ? `Participants (${mockParticipants.length})` : "Meeting Info"}
-                </span>
-                <button onClick={closePanels} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {chatOpen && (
-                <div className="flex-1 flex flex-col overflow-hidden">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {messages.map((msg) => (
-                      <div key={msg.id} className={msg.sender === "You" ? "text-right" : ""}>
-                        <p className="text-xs text-muted-foreground mb-1">{msg.sender} · {msg.time}</p>
-                        <div className={`inline-block px-3 py-2 rounded-xl text-sm max-w-[85%] ${
-                          msg.sender === "You" ? "bg-accent text-foreground" : "bg-muted/50 text-foreground"
-                        }`}>{msg.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-3 border-t border-border/50">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={chatMessage}
-                        onChange={(e) => setChatMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                        placeholder="Type a message..."
-                        className="flex-1 bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/20"
-                      />
-                      <button onClick={sendMessage} className="gradient-button p-2.5 rounded-xl">
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {participantsOpen && (
-                <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                  {mockParticipants.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-accent/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center border border-border/50">
-                          <span className="text-xs font-medium text-foreground">{p.initials}</span>
-                        </div>
-                        <span className="text-sm text-foreground">{p.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {p.muted ? <MicOff className="w-3.5 h-3.5 text-destructive" /> : <Mic className="w-3.5 h-3.5 text-muted-foreground" />}
-                        {p.videoOn ? <VideoIcon className="w-3.5 h-3.5 text-muted-foreground" /> : <VideoOff className="w-3.5 h-3.5 text-destructive" />}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {infoOpen && (
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  <div className="bg-muted/30 p-4 rounded-xl space-y-3 border border-border/30">
-                    {[
-                      { label: "Meeting ID", value: "ARC-482-719" },
-                      { label: "Host", value: "You (Arjun Mehta)" },
-                      { label: "Started", value: "2:00 PM" },
-                      { label: "Encryption", value: "End-to-end" },
-                    ].map((info) => (
-                      <div key={info.label}>
-                        <span className="text-xs text-muted-foreground">{info.label}</span>
-                        <p className="text-sm text-foreground font-mono">{info.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Control bar */}
-      <div className="h-20 border-t border-border/50 bg-card flex items-center justify-center gap-2 px-4 flex-shrink-0">
-        <button
-          onClick={() => setMicOn(!micOn)}
-          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
-            micOn ? "bg-accent text-foreground hover:bg-accent/80" : "bg-destructive text-destructive-foreground"
-          }`}
+      {/* Video Grid */}
+      <div className="h-screen pt-20 pb-32 px-6">
+        <div
+          className={`h-full grid gap-4 ${getGridCols(
+            participantArray.length
+          )} auto-rows-fr max-w-7xl mx-auto`}
         >
-          {micOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-        </button>
-        <button
-          onClick={() => setCamOn(!camOn)}
-          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 ${
-            camOn ? "bg-accent text-foreground hover:bg-accent/80" : "bg-destructive text-destructive-foreground"
-          }`}
-        >
-          {camOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-        </button>
-        <button className="w-11 h-11 rounded-full bg-accent text-foreground hover:bg-accent/80 flex items-center justify-center transition-colors">
-          <Monitor className="w-4 h-4" />
-        </button>
-        <button className="w-11 h-11 rounded-full bg-accent text-foreground hover:bg-accent/80 flex items-center justify-center transition-colors">
-          <Hand className="w-4 h-4" />
-        </button>
-        <button className="w-11 h-11 rounded-full bg-accent text-foreground hover:bg-accent/80 flex items-center justify-center transition-colors">
-          <Smile className="w-4 h-4" />
-        </button>
-
-        <div className="w-px h-8 bg-border mx-1" />
-
-        <button
-          onClick={() => togglePanel("chat")}
-          className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-            chatOpen ? "bg-foreground text-background" : "bg-accent text-foreground hover:bg-accent/80"
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => togglePanel("participants")}
-          className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-            participantsOpen ? "bg-foreground text-background" : "bg-accent text-foreground hover:bg-accent/80"
-          }`}
-        >
-          <Users className="w-4 h-4" />
-        </button>
-
-        <div className="w-px h-8 bg-border mx-1" />
-
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="w-11 h-11 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/90 transition-colors"
-        >
-          <Phone className="w-4 h-4 rotate-[135deg]" />
-        </button>
+          {participantArray.map((participant) => (
+            <VideoParticipant
+              key={participant.userId}
+              participant={participant}
+              isLocal={participant.userId === userId}
+              stream={participant.stream}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* Controls */}
+      <MeetingControls
+        audioEnabled={audioEnabled}
+        videoEnabled={videoEnabled}
+        isScreenSharing={isScreenSharing}
+        handRaised={handRaised}
+        onToggleAudio={toggleAudio}
+        onToggleVideo={toggleVideo}
+        onToggleScreenShare={handleToggleScreenShare}
+        onToggleHandRaise={handleToggleHandRaise}
+        onToggleChat={() => {
+          setChatOpen(!chatOpen);
+          setParticipantsOpen(false);
+        }}
+        onToggleParticipants={() => {
+          setParticipantsOpen(!participantsOpen);
+          setChatOpen(false);
+        }}
+        onLeaveMeeting={handleLeaveMeeting}
+        participantCount={participantArray.length}
+      />
+
+      {/* Chat Panel */}
+      <ChatPanel
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        messages={chatMessages}
+        onSendMessage={handleSendMessage}
+        currentUserId={userId}
+      />
+
+      {/* Participants List */}
+      <ParticipantsList
+        isOpen={participantsOpen}
+        onClose={() => setParticipantsOpen(false)}
+        participants={participantArray}
+        currentUserId={userId}
+        isHost={isHost}
+        onMuteParticipant={handleMuteParticipant}
+        onRemoveParticipant={handleRemoveParticipant}
+      />
+
+      {/* Left Meeting Dialog */}
+      <AlertDialog open={showLeftDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>You left the meeting</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have successfully left the meeting. Returning to dashboard...
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => navigate("/dashboard")}>
+              Go to Dashboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
