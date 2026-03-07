@@ -42,7 +42,7 @@ const Signup = () => {
         >
           <div className="mb-8">
             <Link to="/" className="font-display font-bold text-lg tracking-wide text-foreground lg:hidden block mb-8">
-              NEXUS<span className="text-muted-foreground italic">Call</span>
+              NOVA<span className="text-muted-foreground italic">ARC</span>
             </Link>
             <h1 className="font-display text-3xl font-bold text-foreground">Create your account</h1>
             <p className="text-muted-foreground mt-2 text-sm">Start connecting in minutes</p>
