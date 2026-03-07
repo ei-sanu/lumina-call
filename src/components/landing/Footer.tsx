@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-10">
           <div>
             <span className="font-display font-bold text-lg tracking-wide text-foreground block mb-3">
-              NEXUS<span className="text-muted-foreground italic">Call</span>
+              NOVA<span className="text-muted-foreground italic">ARC</span>
             </span>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Next-generation video conferencing for teams who demand excellence.
