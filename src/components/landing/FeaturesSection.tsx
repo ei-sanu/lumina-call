@@ -2,12 +2,12 @@ import { motion } from "framer-motion";
 import { Video, Shield, Zap, Users, MessageSquare, Monitor } from "lucide-react";
 
 const features = [
-  { icon: Video, title: "HD Video & Audio", description: "Crystal-clear quality with adaptive bitrate streaming that adjusts to your network." },
-  { icon: Shield, title: "End-to-End Encryption", description: "Enterprise-grade security ensures your conversations remain private." },
-  { icon: Zap, title: "Ultra-Low Latency", description: "Sub-100ms latency powered by our global edge network." },
-  { icon: Users, title: "100 Participants", description: "Host large meetings with gallery view and breakout rooms." },
-  { icon: MessageSquare, title: "Live Chat & Reactions", description: "Rich messaging with file sharing during calls." },
-  { icon: Monitor, title: "Screen Sharing", description: "Share your screen with built-in annotation tools." },
+  { icon: Video, title: "HD Video & Audio", description: "Crisp 1080p video that adapts to your connection — no frozen faces or robot voices." },
+  { icon: Shield, title: "End-to-End Encryption", description: "Your conversations stay between you and your team. We can't see them. Nobody can." },
+  { icon: Zap, title: "Ultra-Low Latency", description: "We run on edge servers across 38 regions, so you'll forget there's a network in between." },
+  { icon: Users, title: "Up to 100 People", description: "Run all-hands, workshops, or client demos without worrying about headcount limits." },
+  { icon: MessageSquare, title: "In-Call Chat & Files", description: "Drop links, share docs, or react with emoji — all without leaving the call." },
+  { icon: Monitor, title: "Screen Sharing", description: "Present slides, walk through code, or review designs — with optional annotation tools." },
 ];
 
 const container = {

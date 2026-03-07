@@ -7,12 +7,12 @@ import {
 } from "@/components/ui/accordion";
 
 const faqs = [
-  { q: "How many people can join a meeting?", a: "Free users can host up to 10 participants. Premium tiers support 50–100 participants per meeting with additional collaboration features." },
-  { q: "Is my data secure?", a: "Yes. All meetings are protected with end-to-end encryption. We never store or access your video or audio data." },
-  { q: "Can I record meetings?", a: "Cloud recording is available on premium plans. Recordings are stored securely and accessible from your dashboard." },
-  { q: "Do I need to download anything?", a: "No. NovaArc works entirely in your browser. No downloads, plugins, or extensions required." },
-  { q: "What about mobile support?", a: "NovaArc is fully responsive and works on any modern mobile browser. Native apps are coming soon." },
-  { q: "Is there a free plan?", a: "Yes. Start free with up to 10 participants and 40-minute meetings. Upgrade anytime for unlimited access." },
+  { q: "How many people can be on a call?", a: "Free accounts support up to 10 people per meeting. Paid plans bump that up to 50 or 100 depending on your tier — with breakout rooms and gallery view included." },
+  { q: "Is my data actually private?", a: "Yes — all calls are end-to-end encrypted. We don't listen to, record, or store any of your audio or video. Your data stays yours, full stop." },
+  { q: "Can I record my meetings?", a: "Yep. Cloud recording is available on our paid plans. Recordings land in your dashboard and you can share or download them anytime." },
+  { q: "Do I need to install anything?", a: "Nope. NovaArc runs straight from your browser — Chrome, Firefox, Safari, Edge, you name it. No plugins, no desktop apps, no hassle." },
+  { q: "Does it work on phones?", a: "It does. The whole interface is responsive and works great on mobile browsers. We're also working on native iOS and Android apps — stay tuned." },
+  { q: "Is there a free plan?", a: "There is. You get meetings with up to 10 people for up to 40 minutes each. When you're ready for more, upgrading takes about 30 seconds." },
 ];
 
 const FAQSection = () => {

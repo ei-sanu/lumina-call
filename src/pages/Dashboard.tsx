@@ -80,7 +80,7 @@ const Dashboard = () => {
           </div>
           <Link to="/settings">
             <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center border border-border/50">
-              <span className="text-xs text-muted-foreground font-medium">JD</span>
+              <span className="text-xs text-muted-foreground font-medium">AM</span>
             </div>
           </Link>
         </header>

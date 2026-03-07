@@ -174,8 +174,8 @@ const MeetingRoom = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   <div className="bg-muted/30 p-4 rounded-xl space-y-3 border border-border/30">
                     {[
-                      { label: "Meeting ID", value: "NXC-482-719" },
-                      { label: "Host", value: "You (John Doe)" },
+                      { label: "Meeting ID", value: "ARC-482-719" },
+                      { label: "Host", value: "You (Arjun Mehta)" },
                       { label: "Started", value: "2:00 PM" },
                       { label: "Encryption", value: "End-to-end" },
                     ].map((info) => (

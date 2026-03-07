@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 const stats = [
-  { value: 10, suffix: "M+", label: "Meetings Hosted" },
-  { value: 99.9, suffix: "%", label: "Uptime Guarantee" },
-  { value: 150, suffix: "+", label: "Countries Served" },
-  { value: 42, suffix: "%", label: "Faster Than Competitors" },
+  { value: 2.4, suffix: "M+", label: "Calls Made So Far" },
+  { value: 99.9, suffix: "%", label: "Platform Uptime" },
+  { value: 84, suffix: "+", label: "Countries Using NovaArc" },
+  { value: 38, suffix: "ms", label: "Average Latency" },
 ];
 
 const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) => {

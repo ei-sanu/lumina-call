@@ -42,9 +42,9 @@ const ContactSection = () => {
           {/* Info */}
           <div className="space-y-8">
             <div>
-              <h3 className="font-display text-xl font-semibold text-foreground mb-3">Ready to transform your meetings?</h3>
+              <h3 className="font-display text-xl font-semibold text-foreground mb-3">We'd love to hear from you</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Whether you have questions about features, pricing, or need a demo — our team is ready to help you get started.
+                Got questions about our platform, need help picking a plan, or want to see a live walkthrough? Drop us a line — we typically reply the same day.
               </p>
             </div>
             {[

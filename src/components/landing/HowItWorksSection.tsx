@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 
 const steps = [
-  { number: "01", title: "Create an Account", description: "Sign up in seconds with your email. No credit card required." },
-  { number: "02", title: "Start or Join", description: "Create an instant meeting or schedule one. Share the link." },
-  { number: "03", title: "Collaborate", description: "Video, chat, screen share — all in one seamless experience." },
+  { number: "01", title: "Sign Up in Seconds", description: "Just your email — no card, no trial countdown, no 15-step onboarding." },
+  { number: "02", title: "Create or Join a Room", description: "Start a meeting instantly or share a link. That's literally it." },
+  { number: "03", title: "Talk, Share, Get Stuff Done", description: "Video, chat, screen share, annotations — everything in one clean window." },
 ];
 
 const HowItWorksSection = () => {
