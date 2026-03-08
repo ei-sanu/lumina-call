@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: novaarc-server
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: CLIENT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
