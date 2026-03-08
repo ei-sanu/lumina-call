@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 interface HeroSectionProps {
   onOpenAuth?: (mode: "signin" | "signup") => void;
 }
-
+//enhance
 const HeroSection = ({ onOpenAuth }: HeroSectionProps) => {
   const { isSignedIn } = useUser();
 
