@@ -2,6 +2,7 @@ import silkBg from "@/assets/silk-bg.jpg";
 import { useUser } from "@clerk/react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+//hero section
 
 interface HeroSectionProps {
   onOpenAuth?: (mode: "signin" | "signup") => void;
