@@ -12,7 +12,6 @@ const faqs = [
   { q: "Can I record my meetings?", a: "Yep. Cloud recording is available on our paid plans. Recordings land in your dashboard and you can share or download them anytime." },
   { q: "Do I need to install anything?", a: "Nope. NovaArc runs straight from your browser — Chrome, Firefox, Safari, Edge, you name it. No plugins, no desktop apps, no hassle." },
   { q: "Does it work on phones?", a: "It does. The whole interface is responsive and works great on mobile browsers. We're also working on native iOS and Android apps — stay tuned." },
-  { q: "Is there a free plan?", a: "There is. You get meetings with up to 10 people for up to 40 minutes each. When you're ready for more, upgrading takes about 30 seconds." },
 ];
 
 const FAQSection = () => {
