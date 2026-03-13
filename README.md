@@ -1,6 +1,6 @@
 # NovaArc
 
-A premium video conferencing platform built with React, TypeScript, and Vite.
+A premium video conferencing platform built with React, TypeScript, and Vite..
 
 ## Tech Stack
 
