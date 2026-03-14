@@ -2,60 +2,75 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const apiBaseUrl =
+    (import.meta.env.VITE_API_URL || '').trim() ||
+    (import.meta.env.DEV ? 'http://localhost:3001' : window.location.origin);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+const apiRequest = async (path: string, options?: RequestInit) => {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options?.headers || {}),
+        },
+        ...options,
+    });
+
+    let payload: any = null;
+    try {
+        payload = await response.json();
+    } catch {
+        payload = null;
+    }
+
+    if (!response.ok) {
+        const message = payload?.error || payload?.message || `Request failed with status ${response.status}`;
+        throw new Error(message);
+    }
+
+    return payload;
+};
+
 // Database helper functions
 export const createMeeting = async (hostId: string, hostName: string, title?: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/create`, {
+    return apiRequest('/api/meetings/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hostId, hostName, title }),
     });
-    return response.json();
 };
 
 export const getMeeting = async (meetingId: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/${meetingId}`);
-    return response.json();
+    return apiRequest(`/api/meetings/${meetingId}`);
 };
 
 export const joinMeetingByCode = async (inviteCode: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/join-by-code`, {
+    return apiRequest('/api/meetings/join-by-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inviteCode }),
     });
-    return response.json();
 };
 
 export const endMeeting = async (meetingId: string, hostId: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/${meetingId}/end`, {
+    return apiRequest(`/api/meetings/${meetingId}/end`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hostId }),
     });
-    return response.json();
 };
 
 export const getUserMeetings = async (userId: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/user/${userId}`);
-    return response.json();
+    return apiRequest(`/api/meetings/user/${userId}`);
 };
 
 export const addMeetingParticipant = async (meetingId: string, userId: string, userName: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/${meetingId}/participants`, {
+    return apiRequest(`/api/meetings/${meetingId}/participants`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, userName }),
     });
-    return response.json();
 };
 
 export const updateParticipantLeftTime = async (meetingId: string, userId: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/meetings/${meetingId}/participants/${userId}/leave`, {
+    return apiRequest(`/api/meetings/${meetingId}/participants/${userId}/leave`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
     });
-    return response.json();
 };

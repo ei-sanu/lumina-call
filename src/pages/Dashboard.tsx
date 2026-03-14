@@ -1,5 +1,5 @@
-import Navbar from "@/components/Navbar";
 import silkBg from "@/assets/silk-bg.jpg";
+import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,11 @@ import {
   Copy,
   Link as LinkIcon,
   Loader2,
-  Plus,
-  Video,
   LogOut,
+  Plus,
   Settings,
-  UserCircle
+  UserCircle,
+  Video
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -84,6 +84,7 @@ const Dashboard = () => {
 
         setNewMeetingOpen(false);
         setMeetingTitle("");
+        setRecentMeetings((prev) => [response.meeting, ...prev.filter((m) => m.id !== response.meeting.id)]);
 
         navigate(`/meeting/${response.meeting.id}`);
       } else {
@@ -164,7 +165,10 @@ const Dashboard = () => {
       );
 
       if (response.success && response.meeting) {
+        setRecentMeetings((prev) => [response.meeting, ...prev.filter((m) => m.id !== response.meeting.id)]);
         navigate(`/meeting/${response.meeting.id}`);
+      } else {
+        throw new Error("Failed to start meeting");
       }
     } catch (error) {
       console.error("Error creating instant meeting:", error);

@@ -52,7 +52,7 @@ router.post('/create', async (req, res) => {
 });
 
 // Get meeting details
-router.get('/:meetingId', async (req, res) => {
+router.get('/:meetingId([0-9a-fA-F-]{36})', async (req, res) => {
     try {
         const { meetingId } = req.params;
 
@@ -169,21 +169,41 @@ router.get('/user/:userId', async (req, res) => {
 
         if (hostError) throw hostError;
 
-        // Get meetings where user participated
-        const { data: participatedMeetings, error: participantError } = await supabase
+        // Get meeting IDs where user participated. This avoids relying on nested relation shape.
+        const { data: participationRows, error: participantError } = await supabase
             .from('meeting_participants')
-            .select('meeting_id, meetings(*)')
+            .select('meeting_id, joined_at')
             .eq('user_id', userId)
             .order('joined_at', { ascending: false })
             .limit(20);
 
-        if (participantError) throw participantError;
+        if (participantError) {
+            console.warn('Unable to fetch participated meetings, returning hosted meetings only:', participantError.message);
+        }
+
+        const participatedMeetingIds = (participationRows || [])
+            .map((row) => row.meeting_id)
+            .filter(Boolean);
+
+        let participatedMeetings = [];
+        if (participatedMeetingIds.length > 0) {
+            const { data: participantMeetingsData, error: participantMeetingsError } = await supabase
+                .from('meetings')
+                .select('*')
+                .in('id', participatedMeetingIds);
+
+            if (participantMeetingsError) {
+                console.warn('Unable to resolve participated meeting details:', participantMeetingsError.message);
+            } else {
+                participatedMeetings = participantMeetingsData || [];
+            }
+        }
 
         // Combine and deduplicate
         const meetingIds = new Set();
         const allMeetings = [
             ...(hostedMeetings || []),
-            ...(participatedMeetings || []).map(p => p.meetings).filter(Boolean)
+            ...participatedMeetings
         ].filter(meeting => {
             if (meetingIds.has(meeting.id)) return false;
             meetingIds.add(meeting.id);
