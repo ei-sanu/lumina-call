@@ -66,4 +66,4 @@ export default FAQSection;
 //faq secrtion has been updated to the required ones!!
 
 
-// faq
+// faq queww
