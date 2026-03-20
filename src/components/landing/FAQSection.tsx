@@ -13,7 +13,7 @@ const faqs = [
   { q: "Do I need to install anything?", a: "Nope. NovaArc runs straight from your browser — Chrome, Firefox, Safari, Edge, you name it. No plugins, no desktop apps, no hassle." },
   { q: "Does it work on phones?", a: "It does. The whole interface is responsive and works great on mobile browsers. We're also working on native iOS and Android apps — stay tuned." },
 ];
-
+//llll
 const FAQSection = () => {
   return (
     <section id="faq" className="py-32 relative">
