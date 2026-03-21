@@ -7,7 +7,7 @@ const stats = [
   { value: 84, suffix: "+", label: "Countries Using NovaArc" },
   { value: 38, suffix: "ms", label: "Average Latency" },
 ];
-
+//luminous
 const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) => {
   const [display, setDisplay] = useState("0");
   const ref = useRef<HTMLSpanElement>(null);
