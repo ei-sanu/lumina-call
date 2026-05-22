@@ -13,8 +13,21 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS configuration
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'https://novaarc.vercel.app',
+    'http://localhost:8080',
+    'http://localhost:5173'
+].filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 };
 
@@ -23,7 +36,10 @@ app.use(express.json());
 
 // Socket.io configuration
 const io = new Server(httpServer, {
-    cors: corsOptions,
+    cors: {
+        origin: allowedOrigins,
+        credentials: true
+    },
     pingTimeout: 60000,
     pingInterval: 25000,
 });
@@ -31,6 +47,11 @@ const io = new Server(httpServer, {
 // API Routes
 app.use('/api/meetings', meetingsRouter);
 app.use('/api/rooms', roomsRouter);
+
+// Root route for Render health checks
+app.get('/', (req, res) => {
+    res.send('NovaArc Server is running!');
+});
 
 // Health check
 app.get('/health', (req, res) => {
