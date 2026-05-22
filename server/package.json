@@ -3,10 +3,10 @@
     "version": "1.0.0",
     "type": "module",
     "description": "WebRTC signaling server for NovaArc",
-    "main": "index.js",
+    "main": "server.js",
     "scripts": {
-        "dev": "node --env-file=.env --watch index.js",
-        "start": "node index.js"
+        "dev": "nodemon server.js",
+        "start": "node server.js"
     },
     "keywords": [
         "webrtc",
@@ -24,6 +24,7 @@
         "uuid": "^9.0.1"
     },
     "devDependencies": {
-        "concurrently": "^9.2.1"
+        "concurrently": "^9.2.1",
+        "nodemon": "^3.1.14"
     }
 }
