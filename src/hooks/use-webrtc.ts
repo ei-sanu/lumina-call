@@ -10,6 +10,19 @@ const ICE_SERVERS = {
     ],
 };
 
+const createEmptyVideoTrack = ({ width = 640, height = 480 } = {}) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, width, height);
+    }
+    const stream = canvas.captureStream();
+    return stream.getVideoTracks()[0];
+};
+
 export const useWebRTC = (
     socket: Socket | null,
     roomId: string,
@@ -33,37 +46,58 @@ export const useWebRTC = (
     const initializeMedia = useCallback(async () => {
         try {
             console.log('Initializing media devices...');
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    frameRate: { ideal: 30 },
-                },
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                },
-            });
+            let stream: MediaStream | null = null;
+            
+            // 1. Try to get both video and audio
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+                });
+            } catch (err) {
+                console.warn('Failed to get both media, trying audio only...', err);
+                try {
+                    // 2. Try to get audio only
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+                    });
+                    setVideoEnabled(false);
+                } catch (err2) {
+                    console.warn('Failed to get audio, trying video only...', err2);
+                    try {
+                        // 3. Try to get video only
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
+                        });
+                        setAudioEnabled(false);
+                    } catch (err3) {
+                        console.error('Failed to get any media devices', err3);
+                        // Final fallback: empty stream
+                        stream = new MediaStream();
+                        setAudioEnabled(false);
+                        setVideoEnabled(false);
+                    }
+                }
+            }
 
             console.log('Media stream obtained:', stream.getTracks());
 
-            // Store track references
-            audioTrackRef.current = stream.getAudioTracks()[0];
-            videoTrackRef.current = stream.getVideoTracks()[0];
+            audioTrackRef.current = stream.getAudioTracks()[0] || null;
+            videoTrackRef.current = stream.getVideoTracks()[0] || null;
+
+            // If no video track was obtained, create a black track to keep connection robust
+            if (!videoTrackRef.current) {
+                const emptyTrack = createEmptyVideoTrack();
+                stream.addTrack(emptyTrack);
+                videoTrackRef.current = emptyTrack;
+            }
 
             localStreamRef.current = stream;
             setLocalStream(stream);
 
-            // Set initial enabled states to true
-            if (audioTrackRef.current) audioTrackRef.current.enabled = true;
-            if (videoTrackRef.current) videoTrackRef.current.enabled = true;
-
-            console.log('Media tracks enabled - Audio:', audioTrackRef.current?.enabled, 'Video:', videoTrackRef.current?.enabled);
-
             return stream;
         } catch (error) {
-            console.error('Error accessing media devices:', error);
+            console.error('Error in media initialization:', error);
             throw error;
         }
     }, []);
@@ -122,11 +156,6 @@ export const useWebRTC = (
             if (peerConnection.connectionState === 'connected') {
                 console.log('Peer connection established successfully');
             }
-        };
-
-        // Handle ICE connection state
-        peerConnection.oniceconnectionstatechange = () => {
-            console.log(`ICE connection state (${peerId}):`, peerConnection.iceConnectionState);
         };
 
         peersRef.current.set(peerId, {
@@ -296,24 +325,78 @@ export const useWebRTC = (
         }
     }, [socket, roomId, userId]);
 
-    // Toggle video
-    const toggleVideo = useCallback(() => {
-        if (videoTrackRef.current) {
-            const newState = !videoTrackRef.current.enabled;
-            videoTrackRef.current.enabled = newState;
-            setVideoEnabled(newState);
-
+    // Force mute audio (useful for host-muting)
+    const forceMuteAudio = useCallback(() => {
+        if (audioTrackRef.current && audioTrackRef.current.enabled) {
+            audioTrackRef.current.enabled = false;
+            setAudioEnabled(false);
             if (socket) {
-                socket.emit('toggle-video', {
-                    roomId,
-                    userId,
-                    videoEnabled: newState,
-                });
+                socket.emit('toggle-audio', { roomId, userId, audioEnabled: false });
             }
-
-            console.log('Video toggled:', newState);
+            console.log('Audio force muted');
         }
     }, [socket, roomId, userId]);
+
+    // Toggle video
+    const toggleVideo = useCallback(async () => {
+        if (!localStreamRef.current) return;
+        const newState = !videoEnabled;
+        setVideoEnabled(newState);
+
+        try {
+            if (!newState) {
+                // Turning OFF video: stop the hardware track and replace with black track
+                if (videoTrackRef.current) {
+                    videoTrackRef.current.stop(); // Stops the camera light!
+                    localStreamRef.current.removeTrack(videoTrackRef.current);
+                }
+                
+                const emptyTrack = createEmptyVideoTrack();
+                localStreamRef.current.addTrack(emptyTrack);
+                videoTrackRef.current = emptyTrack;
+
+                // Replace track on all peer connections
+                peersRef.current.forEach(peer => {
+                    const sender = peer.connection.getSenders().find(s => s.track?.kind === 'video');
+                    if (sender) sender.replaceTrack(emptyTrack).catch(e => console.error(e));
+                });
+                
+                setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+
+            } else {
+                // Turning ON video: acquire new hardware track
+                const newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
+                });
+                const newTrack = newStream.getVideoTracks()[0];
+
+                if (videoTrackRef.current) {
+                    videoTrackRef.current.stop();
+                    localStreamRef.current.removeTrack(videoTrackRef.current);
+                }
+                
+                localStreamRef.current.addTrack(newTrack);
+                videoTrackRef.current = newTrack;
+
+                // Replace track on all peer connections
+                peersRef.current.forEach(peer => {
+                    const sender = peer.connection.getSenders().find(s => s.track?.kind === 'video');
+                    if (sender) sender.replaceTrack(newTrack).catch(e => console.error(e));
+                });
+
+                setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
+            }
+
+            if (socket) {
+                socket.emit('toggle-video', { roomId, userId, videoEnabled: newState });
+            }
+            console.log('Video toggled:', newState);
+        } catch (error) {
+            console.error('Error toggling video:', error);
+            // Revert state if failed
+            setVideoEnabled(!newState);
+        }
+    }, [videoEnabled, socket, roomId, userId]);
 
     // Start screen sharing
     const startScreenShare = useCallback(async () => {
@@ -462,6 +545,7 @@ export const useWebRTC = (
         isScreenSharing,
         initializeMedia,
         toggleAudio,
+        forceMuteAudio,
         toggleVideo,
         startScreenShare,
         stopScreenShare,

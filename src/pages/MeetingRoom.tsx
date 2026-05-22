@@ -62,6 +62,7 @@ const MeetingRoom = () => {
     isScreenSharing,
     initializeMedia,
     toggleAudio,
+    forceMuteAudio,
     toggleVideo,
     startScreenShare,
     stopScreenShare,
@@ -158,6 +159,7 @@ const MeetingRoom = () => {
         title: "You were muted",
         description: "The host has muted your microphone",
       });
+      forceMuteAudio();
     });
 
     socket.on("removed-by-host", () => {
@@ -203,7 +205,7 @@ const MeetingRoom = () => {
       socket.off("meeting-ended-by-host");
       socket.off("room-lock-changed");
     };
-  }, [socket, meetingId, userId, navigate]);
+  }, [socket, meetingId, userId, navigate, forceMuteAudio]);
 
   // Convert participants Map to array for display
   const participantArray = useMemo(() => {

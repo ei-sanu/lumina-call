@@ -16,25 +16,16 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
     stream,
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     useEffect(() => {
-        const videoElement = videoRef.current;
-        if (videoElement && stream) {
-            console.log('Setting video stream for:', participant.userName, 'tracks:', stream.getTracks());
-            videoElement.srcObject = stream;
-
-            // Explicitly play the video
-            videoElement.play().catch((error) => {
-                console.error('Error playing video:', error);
-            });
+        if (videoRef.current && stream) {
+            videoRef.current.srcObject = stream;
         }
-
-        return () => {
-            if (videoElement) {
-                videoElement.srcObject = null;
-            }
-        };
-    }, [stream, participant.userName]);
+        if (audioRef.current && stream && !isLocal) {
+            audioRef.current.srcObject = stream;
+        }
+    }, [stream, isLocal]);
 
     const initials = participant.userName
         .split(' ')
@@ -50,19 +41,25 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
             exit={{ opacity: 0, scale: 0.9 }}
             className="relative bg-black/20 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden shadow-lg aspect-video group transition-all duration-300 hover:scale-[1.02] hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/20"
         >
-            {/* Video element */}
-            {participant.videoEnabled && stream ? (
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted={isLocal}
-                    className="w-full h-full object-cover"
-                />
-            ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900 to-indigo-900">
-                    <Avatar className="w-24 h-24">
-                        <AvatarFallback className="text-3xl bg-purple-700 text-white">
+            {/* Always render audio for remote participants to ensure sound works even if video is off */}
+            {!isLocal && (
+                <audio ref={audioRef} autoPlay playsInline />
+            )}
+
+            {/* Video element - always keep it mounted, just hide it if video is disabled */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted={isLocal}
+                className={`w-full h-full object-cover ${participant.videoEnabled ? 'block' : 'hidden'}`}
+            />
+            
+            {/* Avatar fallback when video is disabled */}
+            {!participant.videoEnabled && (
+                <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900 to-indigo-900">
+                    <Avatar className="w-24 h-24 shadow-2xl border-2 border-white/10">
+                        <AvatarFallback className="text-3xl bg-purple-700 text-white font-display">
                             {initials}
                         </AvatarFallback>
                     </Avatar>
@@ -110,19 +107,10 @@ export const VideoParticipant: FC<VideoParticipantProps> = ({
 
             {/* Screen sharing indicator */}
             {participant.screenSharing && (
-                <div className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                <div className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
                     Sharing Screen
                 </div>
             )}
-
-            {/* Connection quality indicator (optional) */}
-            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="flex gap-0.5">
-                    <div className="w-1 h-2 bg-green-500 rounded-full" />
-                    <div className="w-1 h-3 bg-green-500 rounded-full" />
-                    <div className="w-1 h-4 bg-green-500 rounded-full" />
-                </div>
-            </div>
         </motion.div>
     );
 };
