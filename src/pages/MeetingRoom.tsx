@@ -74,6 +74,12 @@ const MeetingRoom = () => {
     setTimeout(() => navigate("/dashboard"), 2000);
   }, [meetingId, userId, navigate]);
 
+  // Handle Join Room Logic (Auto-rejoin on reconnect)
+  const joinRoomAction = useCallback(() => {
+    if (!socket || !meetingId) return;
+    socket.emit("join-room", { roomId: meetingId, userId, userName, isHost });
+  }, [socket, meetingId, userId, userName, isHost]);
+
   // Load meeting details
   useEffect(() => {
     const loadMeeting = async () => {
@@ -116,10 +122,17 @@ const MeetingRoom = () => {
     init();
   }, [socket, isConnected, meetingId, isLoading, initializeMedia]);
 
+  // Re-join room on socket reconnection
+  useEffect(() => {
+    if (isConnected && hasJoined) {
+      joinRoomAction();
+    }
+  }, [isConnected, hasJoined, joinRoomAction]);
+
   const handleJoinMeeting = async () => {
     if (!socket || !meetingId) return;
     try {
-      socket.emit("join-room", { roomId: meetingId, userId, userName, isHost });
+      joinRoomAction();
       await addMeetingParticipant(meetingId, userId, userName);
       setHasJoined(true);
       toast({ title: "Joined Meeting", description: `You are now in ${meetingTitle}` });
@@ -170,15 +183,24 @@ const MeetingRoom = () => {
     };
   }, [socket, meetingId, hasJoined, cleanup]);
 
+  // Participant array derivation (with blank screen fix)
   const participantArray = useMemo(() => {
     const arr: Participant[] = Array.from(participants.values());
-    const hasCurrentUser = arr.some((p) => p.userId === userId);
-    if (!hasCurrentUser && localStream && hasJoined) {
-      arr.unshift({
-        userId, userName, socketId: socket?.id || "",
-        audioEnabled, videoEnabled, screenSharing: isScreenSharing,
-        handRaised, isHost, stream: isScreenSharing ? screenStream! : localStream,
-      });
+    
+    // Always ensure current user is in the list if they have joined, 
+    // even if localStream is still loading (to avoid blank screen)
+    if (hasJoined && !arr.some(p => p.userId === userId)) {
+        arr.unshift({
+            userId, 
+            userName, 
+            socketId: socket?.id || "local",
+            audioEnabled, 
+            videoEnabled, 
+            screenSharing: isScreenSharing,
+            handRaised, 
+            isHost, 
+            stream: isScreenSharing ? screenStream! : (localStream || undefined),
+        });
     }
     return arr;
   }, [participants, userId, userName, audioEnabled, videoEnabled, isScreenSharing, handRaised, localStream, screenStream, isHost, socket, hasJoined]);
@@ -243,7 +265,6 @@ const MeetingRoom = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="relative z-10 w-full max-w-5xl flex flex-col lg:flex-row gap-8 lg:gap-12 items-center"
         >
-          {/* Video Preview */}
           <div className="flex-1 w-full aspect-video max-w-2xl rounded-3xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl relative group">
             {videoEnabled && localStream ? (
               <video 
@@ -255,14 +276,13 @@ const MeetingRoom = () => {
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30 mb-4 group-hover:scale-110 transition-transform duration-500">
+                <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30 mb-4">
                   <VideoOff className="w-8 h-8 text-purple-400" />
                 </div>
-                <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Camera is disabled</p>
+                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Camera is disabled</p>
               </div>
             )}
 
-            {/* Preview Controls */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
               <Button 
                 onClick={toggleAudio}
@@ -281,15 +301,14 @@ const MeetingRoom = () => {
             </div>
           </div>
 
-          {/* Join Info */}
           <div className="w-full lg:w-96 flex flex-col items-center lg:items-start text-center lg:text-left">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 leading-tight">Ready to join?</h1>
-            <p className="text-purple-400 font-bold mb-8 uppercase tracking-widest text-xs">{meetingTitle || "Untitled Meeting"}</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 leading-tight tracking-tight">Ready to join?</h1>
+            <p className="text-purple-400 font-bold mb-8 uppercase tracking-widest text-[10px] bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">{meetingTitle || "Untitled Meeting"}</p>
             
             <div className="space-y-4 w-full">
               <Button 
                 onClick={handleJoinMeeting}
-                className="w-full h-16 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-2xl shadow-purple-600/30 text-lg flex items-center justify-center gap-3 group"
+                className="w-full h-16 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-2xl shadow-purple-600/30 text-lg flex items-center justify-center gap-3"
               >
                 Join Now
                 <motion.div animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
@@ -305,27 +324,12 @@ const MeetingRoom = () => {
                 Cancel and return
               </Button>
             </div>
-
-            <div className="mt-12 pt-8 border-t border-white/5 w-full hidden sm:block">
-              <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-black mb-4">Initial Setup</p>
-              <div className="flex gap-6">
-                <div className={`flex items-center gap-2 text-[10px] font-bold ${audioEnabled ? 'text-green-500' : 'text-red-500'}`}>
-                   <div className={`w-2 h-2 rounded-full ${audioEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                   MICROPHONE
-                </div>
-                <div className={`flex items-center gap-2 text-[10px] font-bold ${videoEnabled ? 'text-green-500' : 'text-red-500'}`}>
-                   <div className={`w-2 h-2 rounded-full ${videoEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                   CAMERA
-                </div>
-              </div>
-            </div>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  // ACTUAL MEETING ROOM
   return (
     <div className="h-screen w-screen bg-[#050505] overflow-hidden flex flex-col relative">
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
@@ -429,8 +433,8 @@ const MeetingRoom = () => {
       <AlertDialog open={showLeftDialog}>
         <AlertDialogContent className="bg-black/90 border-white/10 backdrop-blur-2xl rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white font-bold text-2xl">Meeting Left</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
+            <AlertDialogTitle className="text-white font-bold text-2xl tracking-tight">Meeting Left</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400 font-medium">
               Your session has ended. Returning to dashboard...
             </AlertDialogDescription>
           </AlertDialogHeader>

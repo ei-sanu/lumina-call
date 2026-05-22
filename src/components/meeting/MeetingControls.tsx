@@ -64,229 +64,105 @@ export const MeetingControls: FC<MeetingControlsProps> = ({
         <motion.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="fixed bottom-0 left-0 right-0 z-40 bg-black/20 backdrop-blur-xl border-t border-white/10"
+            className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/10 safe-area-bottom"
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-                <div className="flex items-center justify-between gap-2">
-                    {/* Left section - Meeting info */}
-                    <div className="hidden md:flex items-center gap-3">
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-lg hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50" />
-                            <span className="text-white text-xs sm:text-sm font-medium">Recording</span>
+            <div className="max-w-7xl mx-auto px-2 sm:px-6 py-3 sm:py-6">
+                <div className="flex items-center justify-between gap-1 sm:gap-4">
+                    {/* Left section - Desktop Only */}
+                    <div className="hidden lg:flex items-center gap-3 min-w-[200px]">
+                        <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-xl">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                            <span className="text-white text-xs font-bold uppercase tracking-widest">Live</span>
                         </div>
                     </div>
 
-                    {/* Center section - Main controls */}
-                    <div className="flex items-center gap-2">
-                        {/* Media controls group */}
-                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2">
-                            {/* Audio control */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={onToggleAudio}
-                                        size="lg"
-                                        className={`rounded-full w-14 h-14 transition-all duration-300 ${audioEnabled
-                                            ? 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
-                                            : 'bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30'
-                                            }`}
-                                    >
-                                        {audioEnabled ? (
-                                            <Mic className="w-6 h-6 text-white" />
-                                        ) : (
-                                            <MicOff className="w-6 h-6 text-white" />
-                                        )}
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                    {audioEnabled ? 'Mute' : 'Unmute'}
-                                </TooltipContent>
-                            </Tooltip>
+                    {/* Center section - Main controls (Responsive) */}
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-3 flex-1 lg:flex-none">
+                        {/* Media controls */}
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 sm:bg-white/10 p-1.5 sm:p-2 rounded-2xl border border-white/10">
+                            <Button
+                                onClick={onToggleAudio}
+                                size="icon"
+                                className={`rounded-full w-10 h-10 sm:w-14 sm:h-14 transition-all duration-300 ${audioEnabled
+                                    ? 'bg-white/10 hover:bg-white/20 text-white'
+                                    : 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20'
+                                    }`}
+                            >
+                                {audioEnabled ? <Mic className="w-5 h-5 sm:w-6 sm:h-6" /> : <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />}
+                            </Button>
 
-                            {/* Video control */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={onToggleVideo}
-                                        size="lg"
-                                        className={`rounded-full w-14 h-14 transition-all duration-300 ${videoEnabled
-                                            ? 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
-                                            : 'bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30'
-                                            }`}
-                                    >
-                                        {videoEnabled ? (
-                                            <VideoIcon className="w-6 h-6 text-white" />
-                                        ) : (
-                                            <VideoOff className="w-6 h-6 text-white" />
-                                        )}
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                    {videoEnabled ? 'Turn off camera' : 'Turn on camera'}
-                                </TooltipContent>
-                            </Tooltip>
+                            <Button
+                                onClick={onToggleVideo}
+                                size="icon"
+                                className={`rounded-full w-10 h-10 sm:w-14 sm:h-14 transition-all duration-300 ${videoEnabled
+                                    ? 'bg-white/10 hover:bg-white/20 text-white'
+                                    : 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20'
+                                    }`}
+                            >
+                                {videoEnabled ? <VideoIcon className="w-5 h-5 sm:w-6 sm:h-6" /> : <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" />}
+                            </Button>
                         </div>
 
-                        {/* Glass divider */}
-                        <div className="h-12 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                        {/* Leave button - High Contrast */}
+                        <Button
+                            onClick={onLeaveMeeting}
+                            size="icon"
+                            className="rounded-full w-12 h-10 sm:w-16 sm:h-14 bg-red-600 hover:bg-red-700 text-white transition-all shadow-xl shadow-red-600/30 border border-red-500/50"
+                        >
+                            <Phone className="w-6 h-6 rotate-[135deg]" />
+                        </Button>
 
-                        {/* Sharing controls group */}
-                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2">
-                            {/* Screen share control */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={onToggleScreenShare}
-                                        size="lg"
-                                        className={`rounded-full w-14 h-14 transition-all duration-300 ${isScreenSharing
-                                            ? 'bg-purple-500/20 backdrop-blur-md border border-purple-500/30 shadow-lg shadow-purple-500/20 hover:bg-purple-500/30 hover:shadow-xl hover:shadow-purple-500/30'
-                                            : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
-                                            }`}
-                                    >
-                                        {isScreenSharing ? (
-                                            <MonitorOff className="w-6 h-6 text-white" />
-                                        ) : (
-                                            <Monitor className="w-6 h-6 text-white" />
-                                        )}
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                    {isScreenSharing ? 'Stop sharing' : 'Share screen'}
-                                </TooltipContent>
-                            </Tooltip>
+                        {/* Interaction controls */}
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 sm:bg-white/10 p-1.5 sm:p-2 rounded-2xl border border-white/10">
+                            <Button
+                                onClick={onToggleScreenShare}
+                                size="icon"
+                                className={`rounded-full w-10 h-10 sm:w-14 sm:h-14 transition-all ${isScreenSharing
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-white/10 hover:bg-white/20 text-white'
+                                    }`}
+                            >
+                                {isScreenSharing ? <MonitorOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />}
+                            </Button>
 
-                            {/* Raise hand */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={onToggleHandRaise}
-                                        size="lg"
-                                        className={`rounded-full w-14 h-14 transition-all duration-300 ${handRaised
-                                            ? 'bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 shadow-lg shadow-yellow-500/20 hover:bg-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/30'
-                                            : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30'
-                                            }`}
-                                    >
-                                        <Hand className="w-6 h-6 text-white" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                    {handRaised ? 'Lower hand' : 'Raise hand'}
-                                </TooltipContent>
-                            </Tooltip>
+                            <Button
+                                onClick={onToggleHandRaise}
+                                size="icon"
+                                className={`rounded-full w-10 h-10 sm:w-14 sm:h-14 transition-all ${handRaised
+                                    ? 'bg-yellow-500 text-black'
+                                    : 'bg-white/10 hover:bg-white/20 text-white'
+                                    }`}
+                            >
+                                <Hand className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </Button>
                         </div>
-
-                        {/* Glass divider */}
-                        <div className="h-12 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-
-                        {/* Leave meeting - standalone */}
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    onClick={onLeaveMeeting}
-                                    size="lg"
-                                    className="rounded-full w-14 h-14 bg-red-500/20 backdrop-blur-md border border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300"
-                                >
-                                    <Phone className="w-6 h-6 text-white rotate-135" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                Leave meeting
-                            </TooltipContent>
-                        </Tooltip>
                     </div>
 
-                    {/* Right section - Additional controls */}
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2">
-                            {/* Host controls - only visible if user is host */}
-                            {isHost && onOpenHostControls && (
-                                <>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                onClick={onOpenHostControls}
-                                                size="lg"
-                                                variant="ghost"
-                                                className="rounded-full w-12 h-12 text-white bg-white/10 backdrop-blur-md border border-white/20 hover:bg-purple-500/20 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300"
-                                            >
-                                                <Settings className="w-5 h-5" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                            Host controls
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <div className="h-8 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-                                </>
-                            )}
-
-                            {/* Chat */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={onToggleChat}
-                                        size="lg"
-                                        variant="ghost"
-                                        className="rounded-full w-12 h-12 text-white bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30 transition-all duration-300"
-                                    >
-                                        <MessageSquare className="w-5 h-5" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                    Toggle chat
-                                </TooltipContent>
-                            </Tooltip>
-
-                            {/* Participants */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        onClick={onToggleParticipants}
-                                        size="lg"
-                                        variant="ghost"
-                                        className="rounded-full w-12 h-12 text-white bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30 transition-all duration-300 relative"
-                                    >
-                                        <Users className="w-5 h-5" />
-                                        <span className="absolute -top-1 -right-1 bg-purple-500/80 backdrop-blur-sm border border-purple-500/50 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                                            {participantCount}
-                                        </span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-black/60 backdrop-blur-md border border-white/20">
-                                    Participants ({participantCount})
-                                </TooltipContent>
-                            </Tooltip>
-
-                            {/* More options */}
+                    {/* Right section - Panel controls */}
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-0 lg:min-w-[200px] justify-end">
+                         <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl sm:hidden">
+                             <Button onClick={onToggleChat} variant="ghost" size="icon" className="w-9 h-9 text-white"><MessageSquare className="w-4 h-4" /></Button>
+                             <Button onClick={onToggleParticipants} variant="ghost" size="icon" className="w-9 h-9 text-white"><Users className="w-4 h-4" /></Button>
+                         </div>
+                         
+                         <div className="hidden sm:flex items-center gap-2">
+                            <Button onClick={onToggleChat} variant="ghost" size="icon" className="w-11 h-11 text-white hover:bg-white/10 rounded-full"><MessageSquare className="w-5 h-5" /></Button>
+                            <Button onClick={onToggleParticipants} variant="ghost" size="icon" className="w-11 h-11 text-white hover:bg-white/10 rounded-full relative">
+                                <Users className="w-5 h-5" />
+                                <span className="absolute -top-1 -right-1 bg-purple-600 text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">{participantCount}</span>
+                            </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button
-                                        size="lg"
-                                        variant="ghost"
-                                        className="rounded-full w-12 h-12 text-white bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 hover:shadow-lg hover:shadow-white/30 transition-all duration-300"
-                                    >
-                                        <MoreVertical className="w-5 h-5" />
-                                    </Button>
+                                    <Button variant="ghost" size="icon" className="w-11 h-11 text-white hover:bg-white/10 rounded-full"><MoreVertical className="w-5 h-5" /></Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-48 bg-black/60 backdrop-blur-xl border border-white/20"
-                                >
-                                    <DropdownMenuItem className="text-white hover:bg-white/10 focus:bg-white/10">
-                                        <Settings className="w-4 h-4 mr-2" />
-                                        Settings
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-white hover:bg-white/10 focus:bg-white/10">
-                                        <Monitor className="w-4 h-4 mr-2" />
-                                        Change layout
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-400 hover:bg-red-500/10 focus:bg-red-500/10">
-                                        <Phone className="w-4 h-4 mr-2" />
-                                        End meeting for all
-                                    </DropdownMenuItem>
+                                <DropdownMenuContent align="end" className="bg-black/90 border-white/10 text-white backdrop-blur-xl">
+                                    <DropdownMenuItem className="focus:bg-white/10 cursor-pointer"><Settings className="w-4 h-4 mr-2" /> Settings</DropdownMenuItem>
+                                    {isHost && onOpenHostControls && (
+                                        <DropdownMenuItem onClick={onOpenHostControls} className="focus:bg-white/10 cursor-pointer text-purple-400 font-bold uppercase text-[10px] tracking-widest"><Settings className="w-4 h-4 mr-2" /> Host Controls</DropdownMenuItem>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        </div>
+                         </div>
                     </div>
                 </div>
             </div>
