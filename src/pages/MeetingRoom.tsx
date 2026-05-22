@@ -16,18 +16,18 @@ import { Button } from "@/components/ui/button";
 import { useSocket } from "@/hooks/use-socket";
 import { useToast } from "@/hooks/use-toast";
 import { useWebRTC } from "@/hooks/use-webrtc";
-import { addMeetingParticipant, endMeeting, getMeeting, updateParticipantLeftTime } from "@/lib/supabase";
+import { addMeetingParticipant, getMeeting, updateParticipantLeftTime } from "@/lib/supabase";
 import { ChatMessage, Participant } from "@/types/meeting";
 import { useUser } from "@clerk/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, Camera, Loader2, Mic, MicOff, Video, VideoOff } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Camera, Loader2, Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
   const { id: meetingId } = useParams<{ id: string }>();
-  const { user } = useUser();
+  const { user, isLoaded: isUserLoaded } = useUser();
   const { toast } = useToast();
   const { socket, isConnected } = useSocket();
 
@@ -68,9 +68,16 @@ const MeetingRoom = () => {
     cleanup,
   } = useWebRTC(socket, meetingId || "", userId, userName);
 
+  const handleLeaveMeeting = useCallback(async () => {
+    if (meetingId) await updateParticipantLeftTime(meetingId, userId);
+    setShowLeftDialog(true);
+    setTimeout(() => navigate("/dashboard"), 2000);
+  }, [meetingId, userId, navigate]);
+
   // Load meeting details
   useEffect(() => {
     const loadMeeting = async () => {
+      if (!isUserLoaded) return;
       if (!meetingId) {
         setError("Invalid meeting ID");
         setIsLoading(false);
@@ -93,7 +100,7 @@ const MeetingRoom = () => {
       }
     };
     loadMeeting();
-  }, [meetingId, userId]);
+  }, [meetingId, userId, isUserLoaded]);
 
   // Preview Media initialization
   useEffect(() => {
@@ -149,7 +156,7 @@ const MeetingRoom = () => {
       socket.off("meeting-ended-by-host");
       socket.off("room-lock-changed");
     };
-  }, [socket, hasJoined, meetingId, userId, navigate, forceMuteAudio, toast]);
+  }, [socket, hasJoined, meetingId, userId, navigate, forceMuteAudio, toast, handleLeaveMeeting]);
 
   // Lifecycle cleanup
   useEffect(() => {
@@ -185,12 +192,6 @@ const MeetingRoom = () => {
     else startScreenShare();
   };
 
-  const handleLeaveMeeting = async () => {
-    if (meetingId) await updateParticipantLeftTime(meetingId, userId);
-    setShowLeftDialog(true);
-    setTimeout(() => navigate("/dashboard"), 2000);
-  };
-
   const copyInviteLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/meeting/${meetingId}`);
     setCopied(true);
@@ -205,10 +206,25 @@ const MeetingRoom = () => {
     toast({ title: "Code copied!" });
   };
 
-  if (isLoading) {
+  if (isLoading || !isUserLoaded) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="h-screen w-screen bg-black flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen w-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+          <VideoOff className="w-10 h-10 text-red-500" />
+        </div>
+        <h1 className="text-2xl font-bold text-white mb-2">Meeting Error</h1>
+        <p className="text-gray-400 mb-8 max-w-md">{error}</p>
+        <Button onClick={() => navigate("/dashboard")} className="bg-white text-black hover:bg-gray-200">
+          Return to Dashboard
+        </Button>
       </div>
     );
   }
@@ -216,19 +232,19 @@ const MeetingRoom = () => {
   // LOBBY SCREEN
   if (!hasJoined) {
     return (
-      <div className="h-screen w-screen bg-[#050505] overflow-hidden flex flex-col items-center justify-center relative">
+      <div className="h-screen w-screen bg-[#050505] overflow-hidden flex flex-col items-center justify-center relative p-4">
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
           <img src={silkBg} className="w-full h-full object-cover" alt="" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
         </div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 w-full max-w-4xl px-6 flex flex-col md:flex-row gap-8 items-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 w-full max-w-5xl flex flex-col lg:flex-row gap-8 lg:gap-12 items-center"
         >
           {/* Video Preview */}
-          <div className="flex-1 w-full aspect-video rounded-3xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl relative">
+          <div className="flex-1 w-full aspect-video max-w-2xl rounded-3xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl relative group">
             {videoEnabled && localStream ? (
               <video 
                 autoPlay 
@@ -239,10 +255,10 @@ const MeetingRoom = () => {
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                <div className="w-24 h-24 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30 mb-4">
-                  <VideoOff className="w-10 h-10 text-purple-400" />
+                <div className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30 mb-4 group-hover:scale-110 transition-transform duration-500">
+                  <VideoOff className="w-8 h-8 text-purple-400" />
                 </div>
-                <p className="text-white/60 text-sm font-medium">Camera is off</p>
+                <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Camera is disabled</p>
               </div>
             )}
 
@@ -251,59 +267,55 @@ const MeetingRoom = () => {
               <Button 
                 onClick={toggleAudio}
                 size="icon"
-                className={`w-12 h-12 rounded-full transition-all ${audioEnabled ? 'bg-white/10 hover:bg-white/20' : 'bg-red-500/80 hover:bg-red-500'}`}
+                className={`w-12 h-12 rounded-full transition-all border shadow-lg ${audioEnabled ? 'bg-white/10 border-white/20 hover:bg-white/20' : 'bg-red-500 border-red-400 hover:bg-red-600'}`}
               >
-                {audioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                {audioEnabled ? <Mic className="w-5 h-5 text-white" /> : <MicOff className="w-5 h-5 text-white" />}
               </Button>
               <Button 
                 onClick={toggleVideo}
                 size="icon"
-                className={`w-12 h-12 rounded-full transition-all ${videoEnabled ? 'bg-white/10 hover:bg-white/20' : 'bg-red-500/80 hover:bg-red-500'}`}
+                className={`w-12 h-12 rounded-full transition-all border shadow-lg ${videoEnabled ? 'bg-white/10 border-white/20 hover:bg-white/20' : 'bg-red-500 border-red-400 hover:bg-red-600'}`}
               >
-                {videoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                {videoEnabled ? <Video className="w-5 h-5 text-white" /> : <VideoOff className="w-5 h-5 text-white" />}
               </Button>
             </div>
           </div>
 
           {/* Join Info */}
-          <div className="w-full md:w-80 flex flex-col items-center md:items-start text-center md:text-left">
-            <h1 className="text-3xl font-bold text-white mb-2 leading-tight">Ready to join?</h1>
-            <p className="text-white/60 mb-8 font-medium">{meetingTitle || "Untitled Meeting"}</p>
+          <div className="w-full lg:w-96 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 leading-tight">Ready to join?</h1>
+            <p className="text-purple-400 font-bold mb-8 uppercase tracking-widest text-xs">{meetingTitle || "Untitled Meeting"}</p>
             
             <div className="space-y-4 w-full">
               <Button 
                 onClick={handleJoinMeeting}
-                className="w-full h-14 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-xl shadow-purple-600/20 text-lg group"
+                className="w-full h-16 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-2xl shadow-2xl shadow-purple-600/30 text-lg flex items-center justify-center gap-3 group"
               >
                 Join Now
-                <motion.span 
-                  animate={{ x: [0, 5, 0] }} 
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="ml-2 inline-block"
-                >
-                  →
-                </motion.span>
+                <motion.div animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                   →
+                </motion.div>
               </Button>
               
               <Button 
                 variant="ghost"
                 onClick={() => navigate("/dashboard")}
-                className="w-full text-white/40 hover:text-white hover:bg-white/5 font-medium"
+                className="w-full text-white/50 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]"
               >
-                Back to Dashboard
+                Cancel and return
               </Button>
             </div>
 
-            <div className="mt-8 pt-8 border-t border-white/5 w-full">
-              <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-bold mb-3">Privacy Check</p>
-              <div className="flex gap-4">
-                <div className={`flex items-center gap-2 text-xs ${audioEnabled ? 'text-green-400' : 'text-red-400'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${audioEnabled ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                  Mic {audioEnabled ? 'On' : 'Off'}
+            <div className="mt-12 pt-8 border-t border-white/5 w-full hidden sm:block">
+              <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-black mb-4">Initial Setup</p>
+              <div className="flex gap-6">
+                <div className={`flex items-center gap-2 text-[10px] font-bold ${audioEnabled ? 'text-green-500' : 'text-red-500'}`}>
+                   <div className={`w-2 h-2 rounded-full ${audioEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                   MICROPHONE
                 </div>
-                <div className={`flex items-center gap-2 text-xs ${videoEnabled ? 'text-green-400' : 'text-red-400'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${videoEnabled ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                  Camera {videoEnabled ? 'On' : 'Off'}
+                <div className={`flex items-center gap-2 text-[10px] font-bold ${videoEnabled ? 'text-green-500' : 'text-red-500'}`}>
+                   <div className={`w-2 h-2 rounded-full ${videoEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                   CAMERA
                 </div>
               </div>
             </div>
@@ -339,21 +351,21 @@ const MeetingRoom = () => {
           {screenSharingParticipant ? (
             <motion.div 
               key="sharing"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full h-full flex gap-4 max-w-[1600px]"
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="w-full h-full flex flex-col lg:flex-row gap-4 max-w-[1600px] p-2 sm:p-4"
             >
-              <div className="flex-[3] min-w-0">
+              <div className="flex-[3] min-w-0 h-full">
                 <VideoParticipant
                   participant={screenSharingParticipant}
                   isLocal={screenSharingParticipant.userId === userId}
                   stream={screenSharingParticipant.stream}
                 />
               </div>
-              <div className="flex-1 hidden lg:flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="flex-1 lg:max-w-xs flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 pr-2 custom-scrollbar">
                 {participantArray.filter(p => p.userId !== screenSharingParticipant.userId).map(p => (
-                  <div key={p.userId} className="aspect-video shrink-0">
+                  <div key={p.userId} className="aspect-video shrink-0 w-48 sm:w-64 lg:w-full">
                     <VideoParticipant participant={p} isLocal={p.userId === userId} stream={p.stream} />
                   </div>
                 ))}
@@ -364,7 +376,7 @@ const MeetingRoom = () => {
               key="grid"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className={`w-full h-full max-w-7xl mx-auto grid gap-4 p-4 ${
+              className={`w-full h-full max-w-7xl mx-auto grid gap-3 sm:gap-6 p-2 sm:p-6 content-center ${
                 participantArray.length === 1 ? 'grid-cols-1 max-w-4xl' : 
                 participantArray.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
                 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
@@ -415,11 +427,11 @@ const MeetingRoom = () => {
       />
 
       <AlertDialog open={showLeftDialog}>
-        <AlertDialogContent className="bg-black/90 border-white/10 backdrop-blur-2xl rounded-2xl">
+        <AlertDialogContent className="bg-black/90 border-white/10 backdrop-blur-2xl rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-bold text-2xl">Meeting Left</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
-              Returning to your dashboard...
+              Your session has ended. Returning to dashboard...
             </AlertDialogDescription>
           </AlertDialogHeader>
         </AlertDialogContent>
