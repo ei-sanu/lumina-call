@@ -15,7 +15,8 @@ export const setupSocketHandlers = (io) => {
                 if (!rooms.has(roomId)) {
                     rooms.set(roomId, {
                         participants: new Map(),
-                        host: isHost ? userId : null,
+                        host: isHost ? socket.id : null, // Store socket.id as host
+                        hostUserId: isHost ? userId : null,
                         locked: false,
                         createdAt: Date.now(),
                     });
@@ -29,8 +30,8 @@ export const setupSocketHandlers = (io) => {
                     return;
                 }
 
-                // Add participant to room
-                room.participants.set(userId, {
+                // Create participant object
+                const participant = {
                     socketId: socket.id,
                     userId,
                     userName,
@@ -39,27 +40,23 @@ export const setupSocketHandlers = (io) => {
                     videoEnabled: true,
                     screenSharing: false,
                     handRaised: false,
-                });
+                };
 
+                // Add participant to room keyed by socketId
+                room.participants.set(socket.id, participant);
                 userSocketMap.set(socket.id, { roomId, userId });
 
-                // Get existing participants
+                // Get existing participants (exclude current socket)
                 const existingParticipants = Array.from(room.participants.values())
-                    .filter(p => p.userId !== userId);
+                    .filter(p => p.socketId !== socket.id);
 
                 // Notify the new user about existing participants
                 socket.emit('existing-participants', existingParticipants);
 
                 // Notify existing participants about the new user
-                socket.to(roomId).emit('user-joined', {
-                    userId,
-                    userName,
-                    socketId: socket.id,
-                    audioEnabled: true,
-                    videoEnabled: true,
-                });
+                socket.to(roomId).emit('user-joined', participant);
 
-                console.log(`User ${userName} joined room ${roomId}`);
+                console.log(`User ${userName} (${socket.id}) joined room ${roomId}`);
             } catch (error) {
                 console.error('Error joining room:', error);
                 socket.emit('error', { message: 'Failed to join room' });
@@ -81,54 +78,53 @@ export const setupSocketHandlers = (io) => {
             io.to(to).emit('ice-candidate', { from, candidate });
         });
 
-        // Toggle audio
-        socket.on('toggle-audio', ({ roomId, userId, audioEnabled }) => {
+        // Toggle audio/video (identify by socket.id)
+        socket.on('toggle-audio', ({ roomId, audioEnabled }) => {
             const room = rooms.get(roomId);
-            if (room && room.participants.has(userId)) {
-                room.participants.get(userId).audioEnabled = audioEnabled;
-                socket.to(roomId).emit('user-audio-toggled', { userId, audioEnabled });
+            if (room && room.participants.has(socket.id)) {
+                room.participants.get(socket.id).audioEnabled = audioEnabled;
+                socket.to(roomId).emit('user-audio-toggled', { socketId: socket.id, audioEnabled });
             }
         });
 
-        // Toggle video
-        socket.on('toggle-video', ({ roomId, userId, videoEnabled }) => {
+        socket.on('toggle-video', ({ roomId, videoEnabled }) => {
             const room = rooms.get(roomId);
-            if (room && room.participants.has(userId)) {
-                room.participants.get(userId).videoEnabled = videoEnabled;
-                socket.to(roomId).emit('user-video-toggled', { userId, videoEnabled });
+            if (room && room.participants.has(socket.id)) {
+                room.participants.get(socket.id).videoEnabled = videoEnabled;
+                socket.to(roomId).emit('user-video-toggled', { socketId: socket.id, videoEnabled });
             }
         });
 
         // Screen sharing
-        socket.on('start-screen-share', ({ roomId, userId }) => {
+        socket.on('start-screen-share', ({ roomId }) => {
             const room = rooms.get(roomId);
-            if (room && room.participants.has(userId)) {
-                room.participants.get(userId).screenSharing = true;
-                socket.to(roomId).emit('user-started-screen-share', { userId });
+            if (room && room.participants.has(socket.id)) {
+                room.participants.get(socket.id).screenSharing = true;
+                socket.to(roomId).emit('user-started-screen-share', { socketId: socket.id });
             }
         });
 
-        socket.on('stop-screen-share', ({ roomId, userId }) => {
+        socket.on('stop-screen-share', ({ roomId }) => {
             const room = rooms.get(roomId);
-            if (room && room.participants.has(userId)) {
-                room.participants.get(userId).screenSharing = false;
-                socket.to(roomId).emit('user-stopped-screen-share', { userId });
+            if (room && room.participants.has(socket.id)) {
+                room.participants.get(socket.id).screenSharing = false;
+                socket.to(roomId).emit('user-stopped-screen-share', { socketId: socket.id });
             }
         });
 
         // Raise hand
-        socket.on('raise-hand', ({ roomId, userId, raised }) => {
+        socket.on('raise-hand', ({ roomId, raised }) => {
             const room = rooms.get(roomId);
-            if (room && room.participants.has(userId)) {
-                room.participants.get(userId).handRaised = raised;
-                socket.to(roomId).emit('hand-raised', { userId, raised });
+            if (room && room.participants.has(socket.id)) {
+                room.participants.get(socket.id).handRaised = raised;
+                socket.to(roomId).emit('hand-raised', { socketId: socket.id, raised });
             }
         });
 
         // Chat messages
         socket.on('chat-message', ({ roomId, message, userId, userName, recipientId }) => {
             const chatMessage = {
-                id: `${Date.now()}-${userId}`,
+                id: `${Date.now()}-${socket.id}`,
                 userId,
                 userName,
                 message,
@@ -137,150 +133,75 @@ export const setupSocketHandlers = (io) => {
             };
 
             if (recipientId) {
-                // Direct message - send only to recipient and sender
                 const room = rooms.get(roomId);
                 if (room) {
+                    // Try to find recipient by socketId (recipientId here is likely socketId now)
                     const recipient = room.participants.get(recipientId);
                     if (recipient) {
-                        // Send to recipient
                         io.to(recipient.socketId).emit('chat-message', chatMessage);
-                        // Send back to sender for confirmation
                         socket.emit('chat-message', chatMessage);
                     }
                 }
             } else {
-                // Broadcast to everyone in the room
                 io.to(roomId).emit('chat-message', chatMessage);
             }
         });
 
-        // Host controls - Mute participant
-        socket.on('host-mute-participant', ({ roomId, targetUserId, hostId }) => {
+        // Host controls
+        socket.on('host-mute-participant', ({ roomId, targetSocketId }) => {
             const room = rooms.get(roomId);
-            if (room && room.host === hostId) {
-                const targetParticipant = room.participants.get(targetUserId);
-                if (targetParticipant) {
-                    io.to(targetParticipant.socketId).emit('host-muted-you');
-                    targetParticipant.audioEnabled = false;
-                    socket.to(roomId).emit('user-audio-toggled', {
-                        userId: targetUserId,
-                        audioEnabled: false
-                    });
+            if (room && room.host === socket.id) {
+                const target = room.participants.get(targetSocketId);
+                if (target) {
+                    io.to(targetSocketId).emit('host-muted-you');
+                    target.audioEnabled = false;
+                    socket.to(roomId).emit('user-audio-toggled', { socketId: targetSocketId, audioEnabled: false });
                 }
             }
         });
 
-        // Host controls - Remove participant
-        socket.on('host-remove-participant', ({ roomId, targetUserId, hostId }) => {
+        socket.on('host-remove-participant', ({ roomId, targetSocketId }) => {
             const room = rooms.get(roomId);
-            if (room && room.host === hostId) {
-                const targetParticipant = room.participants.get(targetUserId);
-                if (targetParticipant) {
-                    io.to(targetParticipant.socketId).emit('removed-by-host');
-                    handleUserLeave(targetParticipant.socketId);
+            if (room && room.host === socket.id) {
+                const target = room.participants.get(targetSocketId);
+                if (target) {
+                    io.to(targetSocketId).emit('removed-by-host');
+                    handleUserLeave(targetSocketId);
                 }
             }
         });
 
-        // Host controls - Lock room
-        socket.on('host-lock-room', ({ roomId, locked, hostId }) => {
-            const room = rooms.get(roomId);
-            if (room && room.host === hostId) {
-                room.locked = locked;
-                socket.to(roomId).emit('room-lock-changed', { locked });
-                console.log(`Room ${roomId} ${locked ? 'locked' : 'unlocked'} by host`);
-            }
-        });
-
-        // Host controls - Mute all participants
-        socket.on('host-mute-all', ({ roomId, hostId }) => {
-            const room = rooms.get(roomId);
-            if (room && room.host === hostId) {
-                room.participants.forEach((participant, userId) => {
-                    if (userId !== hostId) {
-                        participant.audioEnabled = false;
-                        io.to(participant.socketId).emit('host-muted-you');
-                        console.log(`Muted ${participant.userName} by host`);
-                    }
-                });
-                socket.to(roomId).emit('all-participants-muted');
-            }
-        });
-
-        // Host controls - End meeting for all
-        socket.on('end-meeting-for-all', ({ roomId }) => {
-            const userData = userSocketMap.get(socket.id);
-            if (!userData) return;
-
-            const { userId } = userData;
-            const room = rooms.get(roomId);
-
-            // Only host can end meeting for all
-            if (room && room.host === userId) {
-                // Notify all participants except host
-                socket.to(roomId).emit('meeting-ended-by-host');
-
-                // Clean up all participants
-                Array.from(room.participants.values()).forEach(participant => {
-                    if (participant.socketId !== socket.id) {
-                        const participantSocket = io.sockets.sockets.get(participant.socketId);
-                        if (participantSocket) {
-                            participantSocket.leave(roomId);
-                        }
-                        userSocketMap.delete(participant.socketId);
-                    }
-                });
-
-                // Delete the room
-                rooms.delete(roomId);
-                console.log(`Room ${roomId} ended by host ${userId}`);
-            }
-        });
-
-        // Leave room
         socket.on('leave-room', () => {
             handleUserLeave(socket.id);
         });
 
-        // Disconnect
         socket.on('disconnect', () => {
-            console.log('User disconnected:', socket.id);
             handleUserLeave(socket.id);
         });
 
-        // Helper function to handle user leaving
         function handleUserLeave(socketId) {
             const userData = userSocketMap.get(socketId);
             if (!userData) return;
 
-            const { roomId, userId } = userData;
+            const { roomId } = userData;
             const room = rooms.get(roomId);
 
             if (room) {
-                room.participants.delete(userId);
-                const participant = room.participants.get(userId);
-                socket.to(roomId).emit('user-left', {
-                    userId,
-                    socketId: socketId
-                });
+                room.participants.delete(socketId);
+                socket.to(roomId).emit('user-left', { socketId });
 
-                // Clean up empty rooms
                 if (room.participants.size === 0) {
                     rooms.delete(roomId);
-                    console.log(`Room ${roomId} deleted (empty)`);
-                } else if (room.host === userId) {
-                    // Transfer host to another participant
-                    const newHost = Array.from(room.participants.values())[0];
-                    room.host = newHost.userId;
-                    newHost.isHost = true;
-                    io.to(roomId).emit('host-changed', { newHostId: newHost.userId });
+                } else if (room.host === socketId) {
+                    const nextParticipant = Array.from(room.participants.values())[0];
+                    room.host = nextParticipant.socketId;
+                    nextParticipant.isHost = true;
+                    io.to(roomId).emit('host-changed', { newHostId: nextParticipant.socketId });
                 }
             }
-
             userSocketMap.delete(socketId);
         }
     });
 };
 
-// Export room data for API access
 export const getRooms = () => rooms;

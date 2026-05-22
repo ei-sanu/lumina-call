@@ -95,8 +95,8 @@ export const useWebRTC = (
         }
     }, []);
 
-    const createPeerConnection = useCallback((peerId: string, peerUserId: string): RTCPeerConnection => {
-        console.log('Creating peer connection for:', peerId);
+    const createPeerConnection = useCallback((peerSocketId: string): RTCPeerConnection => {
+        console.log('Creating peer connection for:', peerSocketId);
         const peerConnection = new RTCPeerConnection(ICE_SERVERS);
 
         if (localStreamRef.current) {
@@ -106,15 +106,15 @@ export const useWebRTC = (
         }
 
         peerConnection.ontrack = (event) => {
-            console.log('Received remote track:', event.track.kind, 'from:', peerId);
+            console.log('Received remote track:', event.track.kind, 'from:', peerSocketId);
             const [remoteStream] = event.streams;
 
             setParticipants((prev) => {
                 const updated = new Map(prev);
-                const participant = updated.get(peerUserId);
+                const participant = updated.get(peerSocketId);
                 if (participant) {
                     participant.stream = remoteStream;
-                    updated.set(peerUserId, { ...participant });
+                    updated.set(peerSocketId, { ...participant });
                 }
                 return updated;
             });
@@ -123,7 +123,7 @@ export const useWebRTC = (
         peerConnection.onicecandidate = (event) => {
             if (event.candidate && socket) {
                 socket.emit('ice-candidate', {
-                    to: peerId,
+                    to: peerSocketId,
                     candidate: event.candidate,
                     from: socket.id,
                 });
@@ -136,7 +136,7 @@ export const useWebRTC = (
             }
         };
 
-        peersRef.current.set(peerId, { peerId, connection: peerConnection });
+        peersRef.current.set(peerSocketId, { peerId: peerSocketId, connection: peerConnection });
         return peerConnection;
     }, [socket]);
 
@@ -144,16 +144,24 @@ export const useWebRTC = (
         console.log('User joined:', participant.userName, participant.socketId);
         setParticipants((prev) => {
             const updated = new Map(prev);
-            updated.set(participant.userId, participant);
+            updated.set(participant.socketId, participant); // Key by socketId
             return updated;
         });
 
-        if (socket && localStreamRef.current) {
-            const peerConnection = createPeerConnection(participant.socketId, participant.userId);
+        // The joiner should receive offers from existing participants OR 
+        // existing participants should receive offers from the joiner.
+        // Let's have the joiner (who gets existing-participants) send offers.
+        if (socket && localStreamRef.current && participant.socketId !== socket.id) {
+            const peerConnection = createPeerConnection(participant.socketId);
             try {
                 const offer = await peerConnection.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
                 await peerConnection.setLocalDescription(offer);
-                socket.emit('offer', { to: participant.socketId, offer, from: socket.id, fromUserId: userId });
+                socket.emit('offer', { 
+                    to: participant.socketId, 
+                    offer, 
+                    from: socket.id, 
+                    fromUserId: userId 
+                });
             } catch (error) {
                 console.error('Error creating offer:', error);
             }
@@ -162,7 +170,7 @@ export const useWebRTC = (
 
     const handleOffer = useCallback(async (data: { from: string; offer: RTCSessionDescriptionInit; fromUserId: string }) => {
         console.log('Received offer from:', data.from);
-        const peerConnection = createPeerConnection(data.from, data.fromUserId);
+        const peerConnection = createPeerConnection(data.from);
         try {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await peerConnection.createAnswer();
@@ -197,53 +205,51 @@ export const useWebRTC = (
         }
     }, []);
 
-    const handleUserLeft = useCallback((data: { userId: string; socketId: string }) => {
+    const handleUserLeft = useCallback((data: { socketId: string }) => {
+        console.log('User left:', data.socketId);
         setParticipants((prev) => {
             const updated = new Map(prev);
-            const participant = updated.get(data.userId);
-            if (participant) {
-                const peer = peersRef.current.get(data.socketId || participant.socketId);
-                if (peer) {
-                    peer.connection.close();
-                    peersRef.current.delete(data.socketId || participant.socketId);
-                }
-                updated.delete(data.userId);
+            const peer = peersRef.current.get(data.socketId);
+            if (peer) {
+                peer.connection.close();
+                peersRef.current.delete(data.socketId);
             }
+            updated.delete(data.socketId);
             return updated;
         });
     }, []);
 
-    const handleUserAudioToggled = useCallback((data: { userId: string; audioEnabled: boolean }) => {
+    const handleUserAudioToggled = useCallback((data: { socketId: string; audioEnabled: boolean }) => {
         setParticipants((prev) => {
             const updated = new Map(prev);
-            const participant = updated.get(data.userId);
+            const participant = updated.get(data.socketId);
             if (participant) {
                 participant.audioEnabled = data.audioEnabled;
-                updated.set(data.userId, { ...participant });
+                updated.set(data.socketId, { ...participant });
             }
             return updated;
         });
     }, []);
 
-    const handleUserVideoToggled = useCallback((data: { userId: string; videoEnabled: boolean }) => {
+    const handleUserVideoToggled = useCallback((data: { socketId: string; videoEnabled: boolean }) => {
         setParticipants((prev) => {
             const updated = new Map(prev);
-            const participant = updated.get(data.userId);
+            const participant = updated.get(data.socketId);
             if (participant) {
                 participant.videoEnabled = data.videoEnabled;
-                updated.set(data.userId, { ...participant });
+                updated.set(data.socketId, { ...participant });
             }
             return updated;
         });
     }, []);
 
-    const handleUserScreenShare = useCallback((data: { userId: string; isSharing: boolean }) => {
+    const handleUserScreenShare = useCallback((data: { socketId: string; isSharing: boolean }) => {
         setParticipants((prev) => {
             const updated = new Map(prev);
-            const participant = updated.get(data.userId);
+            const participant = updated.get(data.socketId);
             if (participant) {
                 participant.screenSharing = data.isSharing;
-                updated.set(data.userId, { ...participant });
+                updated.set(data.socketId, { ...participant });
             }
             return updated;
         });
@@ -255,20 +261,20 @@ export const useWebRTC = (
             audioTrackRef.current.enabled = newState;
             setAudioEnabled(newState);
             if (socket) {
-                socket.emit('toggle-audio', { roomId, userId, audioEnabled: newState });
+                socket.emit('toggle-audio', { roomId, audioEnabled: newState });
             }
         }
-    }, [socket, roomId, userId]);
+    }, [socket, roomId]);
 
     const forceMuteAudio = useCallback(() => {
         if (audioTrackRef.current && audioTrackRef.current.enabled) {
             audioTrackRef.current.enabled = false;
             setAudioEnabled(false);
             if (socket) {
-                socket.emit('toggle-audio', { roomId, userId, audioEnabled: false });
+                socket.emit('toggle-audio', { roomId, audioEnabled: false });
             }
         }
-    }, [socket, roomId, userId]);
+    }, [socket, roomId]);
 
     const toggleVideo = useCallback(async () => {
         if (!localStreamRef.current) return;
@@ -307,13 +313,13 @@ export const useWebRTC = (
                 setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
             }
             if (socket) {
-                socket.emit('toggle-video', { roomId, userId, videoEnabled: newState });
+                socket.emit('toggle-video', { roomId, videoEnabled: newState });
             }
         } catch (error) {
             console.error('Error toggling video:', error);
             setVideoEnabled(!newState);
         }
-    }, [videoEnabled, socket, roomId, userId]);
+    }, [videoEnabled, socket, roomId]);
 
     const startScreenShare = useCallback(async () => {
         try {
@@ -330,12 +336,12 @@ export const useWebRTC = (
                 }
             });
 
-            if (socket) socket.emit('start-screen-share', { roomId, userId });
+            if (socket) socket.emit('start-screen-share', { roomId });
             screenTrack.onended = () => stopScreenShare();
         } catch (error) {
             console.error('Error starting screen share:', error);
         }
-    }, [socket, roomId, userId]);
+    }, [socket, roomId, stopScreenShare]);
 
     const stopScreenShare = useCallback(() => {
         if (screenStreamRef.current) {
@@ -351,9 +357,9 @@ export const useWebRTC = (
                     }
                 });
             }
-            if (socket) socket.emit('stop-screen-share', { roomId, userId });
+            if (socket) socket.emit('stop-screen-share', { roomId });
         }
-    }, [socket, roomId, userId]);
+    }, [socket, roomId]);
 
     const cleanup = useCallback(() => {
         if (localStreamRef.current) {
@@ -375,21 +381,29 @@ export const useWebRTC = (
 
     useEffect(() => {
         if (!socket) return;
+        
         socket.on('existing-participants', (existingParticipants: Participant[]) => {
+            console.log('Existing participants:', existingParticipants.length);
             existingParticipants.forEach((participant) => {
-                setParticipants((prev) => new Map(prev).set(participant.userId, participant));
                 handleUserJoined(participant);
             });
         });
-        socket.on('user-joined', handleUserJoined);
+
+        socket.on('user-joined', (participant: Participant) => {
+            console.log('Remote user joined:', participant.userName);
+            setParticipants((prev) => new Map(prev).set(participant.socketId, participant));
+            // In Mesh, existing users don't need to do anything, 
+            // the new joiner will send them an offer.
+        });
+
         socket.on('offer', handleOffer);
         socket.on('answer', handleAnswer);
         socket.on('ice-candidate', handleIceCandidate);
         socket.on('user-left', handleUserLeft);
         socket.on('user-audio-toggled', handleUserAudioToggled);
         socket.on('user-video-toggled', handleUserVideoToggled);
-        socket.on('user-started-screen-share', (data: { userId: string }) => handleUserScreenShare({ ...data, isSharing: true }));
-        socket.on('user-stopped-screen-share', (data: { userId: string }) => handleUserScreenShare({ ...data, isSharing: false }));
+        socket.on('user-started-screen-share', (data: { socketId: string }) => handleUserScreenShare({ ...data, isSharing: true }));
+        socket.on('user-stopped-screen-share', (data: { socketId: string }) => handleUserScreenShare({ ...data, isSharing: false }));
 
         return () => {
             socket.off('existing-participants');
